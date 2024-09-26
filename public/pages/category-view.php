@@ -26,9 +26,8 @@
 
     <!-- HIGHLIGHT PRODUCTS -->
     <div class="yellow w-100 min-vh-100">
-        <h2 class="ps-5 pt-4">Featured Goodies</h2>
         <div class="container" >
-            <div class="row pb-3" style="height: 75vh">
+            <div class="row py-3" style="height: 75vh">
                 <div class="col h-100">
                     <div class="card w-100 me-3 h-100">
                         <img src="../assets/image.png" class="card-img-top h-75" alt="...">
