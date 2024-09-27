@@ -16,7 +16,7 @@
             </ul>
         </div>
         <div class="user-actions">
-            <p class="email">email@example.com</p>
+            <p class="email"><?=$_SESSION['userEmail']?></p>
             <a href="../logout.php"><div class="logout">Logout</div></a>
         </div>
     </nav>
