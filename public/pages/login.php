@@ -80,7 +80,8 @@
                         exit;
                     } else if ($user['uType'] == 3) {
                         $_SESSION['userID'] = $user['uID'];
-                        header("Location: ../admin/admin.php");
+                        $_SESSION['userEmail'] = $user['uEmail'];
+                        header("Location: ../../admin/admin.php");
                         exit;
                     }
                 } else {

@@ -1,3 +1,4 @@
+<?php session_start();?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,7 +12,8 @@
 
 </head>
 <body>
-    <div id="navbar-container"></div>
+
+    <?php include 'layout/navbar.php'; ?>
 
     <section id="main-container">
         <main>
