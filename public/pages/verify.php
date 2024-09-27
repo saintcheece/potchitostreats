@@ -27,8 +27,6 @@
 
         if($_POST['inputCode'] == $_SESSION['verificationCode']){
 
-            require('../../controller/db_model.php');
-
             $hash = password_hash($_POST['signPass'], PASSWORD_BCRYPT);
 
             $stmt = $conn->prepare("INSERT INTO users (uFName, uLName, uEmail, uPass, uAddrRegion, uAddrProvince, uAddrCity, uAddrTown, uAddrStreet, uAddrHouseNum) VALUES (:signNameFirst, :signNameLast, :signEmail, :signPass, :signRegion, :signProv, :signCity, :signTown, :signStreet, :signAddHouseNum)");
