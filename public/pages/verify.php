@@ -27,6 +27,8 @@
 
         if($_POST['inputCode'] == $_SESSION['verificationCode']){
 
+            require('../../controller/db_model.php');
+
             $hash = password_hash($_POST['signPass'], PASSWORD_BCRYPT);
 
             $stmt = $conn->prepare("INSERT INTO users (uFName, uLName, uEmail, uPass, uAddrRegion, uAddrProvince, uAddrCity, uAddrTown, uAddrStreet, uAddrHouseNum) VALUES (:signNameFirst, :signNameLast, :signEmail, :signPass, :signRegion, :signProv, :signCity, :signTown, :signStreet, :signAddHouseNum)");
@@ -91,26 +93,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <style>
+        .verification-container {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: 
+            linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), /* Darken with black gradient */
+            url('../assets/potchitosrepeat.png');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .verification-card {
+            width: 400px;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .verification-card h1 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .verification-card input {
+            letter-spacing: 5px;
+            text-align: center;
+            font-size: 1.25rem;
+        }
+
+        .verification-card button {
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
 </head>
     <body>
-    <form action="verify.php" method="post">
-        <label for="code">Enter your verification code</label>
-        <input type="text" name="inputCode" id="code">
-
-        <!-- FOR ACCOUNT INFO STORAGE -->
-        
-        <input type="hidden" name="signNameFirst" id="signNameFirst" value="<?php echo $_POST["signNameFirst"] ?>">
-        <input type="hidden" name="signNameLast" id="signNameLast" value="<?php echo $_POST["signNameLast"] ?>">
-        <input type="hidden" name="signEmail" id="signEmail" value="<?php echo $_POST["signEmail"] ?>">
-        <input type="hidden" name="signPass" id="signPass" value="<?php echo $_POST["signPass"] ?>">
-        <input type="hidden" name="signAddHouseNum" id="signAddHouseNum" value="<?php echo $_POST["signAddHouseNum"] ?>">
-        <input type="hidden" name="signStreet" id="signStreet" value="<?php echo $_POST["signStreet"] ?>">
-        <input type="hidden" name="signTown" id="signTown" value="<?php echo $_POST["signTown"] ?>">
-        <input type="hidden" name="signProv" id="signProv" value="<?php echo $_POST["signProv"] ?>">
-        <input type="hidden" name="signCity" id="signCity" value="<?php echo $_POST["signCity"] ?>">
-        <input type="hidden" name="signRegion" id="signRegion" value="<?php echo $_POST["signRegion"] ?>">
-
-        <input type="submit" name="isSubmitted" value="Submit">
-    </form>
+    <div class="verification-container">
+    <div class="verification-card">
+        <h1>Verification Code</h1>
+        <p class="text-center">Enter the code sent to your email</p>
+        <form action="verify.php" method="post">
+            <div class="mb-3">
+                <input type="text" class="form-control" name="inputCode" id="code" maxlength="6" required>
+                <!-- FOR ACCOUNT INFO STORAGE -->
+                <input type="hidden" name="signNameFirst" id="signNameFirst" value="<?php echo $_POST["signNameFirst"] ?>">
+                <input type="hidden" name="signNameLast" id="signNameLast" value="<?php echo $_POST["signNameLast"] ?>">
+                <input type="hidden" name="signEmail" id="signEmail" value="<?php echo $_POST["signEmail"] ?>">
+                <input type="hidden" name="signPass" id="signPass" value="<?php echo $_POST["signPass"] ?>">
+                <input type="hidden" name="signAddHouseNum" id="signAddHouseNum" value="<?php echo $_POST["signAddHouseNum"] ?>">
+                <input type="hidden" name="signStreet" id="signStreet" value="<?php echo $_POST["signStreet"] ?>">
+                <input type="hidden" name="signTown" id="signTown" value="<?php echo $_POST["signTown"] ?>">
+                <input type="hidden" name="signProv" id="signProv" value="<?php echo $_POST["signProv"] ?>">
+                <input type="hidden" name="signCity" id="signCity" value="<?php echo $_POST["signCity"] ?>">
+                <input type="hidden" name="signRegion" id="signRegion" value="<?php echo $_POST["signRegion"] ?>">
+            </div>
+            <button type="submit" class="btn btn-primary" name="isSubmitted" value="Verify">Verify</button>
+        </form>
+        <p class="text-center mt-3">Didn't receive the code? <a href="#">Resend</a></p>
+    </div>
+</div>
 </body>
 </html>

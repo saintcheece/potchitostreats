@@ -1,3 +1,7 @@
+<?php 
+    require('../../controller/db_model_products.php');
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,35 +44,7 @@
         </div>
     </header>
     <section class="container py-5">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <img src="assets/cake1.jpg" class="card-img-top" alt="Cookie 1">
-                    <div class="card-body">
-                        <h5 class="card-title">Cookie 1</h5>
-                        <p class="card-text">Description of Cookie 1.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <img src="assets/cake2.jpg" class="card-img-top" alt="Cookie 2">
-                    <div class="card-body">
-                        <h5 class="card-title">Cookie 2</h5>
-                        <p class="card-text">Description of Cookie 2.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <img src="assets/cake3.jpg" class="card-img-top" alt="Cookie 3">
-                    <div class="card-body">
-                        <h5 class="card-title">Cookie 3</h5>
-                        <p class="card-text">Description of Cookie 3.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <?php displayProductCards($products, 2);?>
     </section>
     <?php include 'layout/footer.php'; ?>
     

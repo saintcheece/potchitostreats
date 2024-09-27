@@ -67,19 +67,19 @@
             $emailAddress = filter_input(INPUT_POST, 'inptEmail', FILTER_SANITIZE_EMAIL);
             $password = filter_input(INPUT_POST, 'inptPass', FILTER_SANITIZE_STRING);
 
-            $stmt = $conn->prepare("SELECT uPass FROM users WHERE uEmail = ?");
+            $stmt = $conn->prepare("SELECT * FROM users WHERE uEmail = ?");
             $stmt->execute([$emailAddress]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($result) {
-                $hashed_password = $result['uPass'];
+            if ($user) {
+                $hashed_password = $user['uPass'];
                 if (password_verify($password, $hashed_password)) {
                     if ($user['uType'] == 1) {
-                        $_SESSION['userID'] = $result['uID'];
+                        $_SESSION['userID'] = $user['uID'];
                         header("Location: index.php");
                         exit;
                     } else if ($user['uType'] == 3) {
-                        $_SESSION['userID'] = $result['uID'];
+                        $_SESSION['userID'] = $user['uID'];
                         header("Location: ../admin/admin.php");
                         exit;
                     }

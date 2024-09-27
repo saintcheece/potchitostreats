@@ -10,4 +10,4 @@
             $newname = "$entity"."_$pid.jpg";
             move_uploaded_file($_FILES['fileField']['tmp_name'], "../uploads/$newname");
         }
-}
+    }

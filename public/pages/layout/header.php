@@ -29,10 +29,17 @@
             <a class="nav-link text-secondary" href="about.php">About Us</a>
         </div>
 
-        <div class="d-flex align-items-center">
-            <a class="nav-link text-secondary mr-3" href="cart.php"><i class="fas fa-shopping-cart"></i> Cart</a>
-            <a class="btn btn-primary" href="login.php">Log In</a>
-        </div>
+        <?php 
+          if(isset($_SESSION['userID']) && $_SESSION['userID'] != null) { ?>
+            <div class="d-flex align-items-center">
+                <a class="nav-link text-secondary mr-3" href="cart.php"><i class="fas fa-shopping-cart"></i> Cart</a>
+                <a class="btn btn-primary" href="logout.php">Log Out</a>
+            </div>
+        <?php }else{ ?>
+            <div class="d-flex align-items-center">
+                <a class="btn btn-primary" href="login.php">Log In</a>
+            </div>
+        <?php } ?>
     </div>
 </nav>
 

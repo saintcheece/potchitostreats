@@ -64,7 +64,6 @@
     </style>
 </head>
 <body>
-    <?php include 'layout/header.php'; ?>
 
     <div class="page-container p-4">
         <div class="form-box">
@@ -123,7 +122,7 @@
             </form>
         </div>
     </div>
-    <?php include 'layout/footer.php'; ?>
+
 </body>
 <script src="../js/ph-address-selector.js"></script>
 <script>
