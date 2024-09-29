@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once("../controller/db_model.php");
 if (isset($_POST['productName'])) {
     $productName = filter_input(INPUT_POST, 'productName', FILTER_SANITIZE_STRING);
@@ -7,10 +8,30 @@ if (isset($_POST['productName'])) {
     $productShelfLife = filter_input(INPUT_POST, 'productShelfLife', FILTER_SANITIZE_STRING);
     $productType = filter_input(INPUT_POST, 'productType', FILTER_SANITIZE_STRING);
 
+    $typeString;
+
+    switch($_POST['productType']){
+        case 1: $typeString = "Cookie";
+        break;
+        case 2: $typeString = "Pastries";
+        break;
+        case 3: $typeString = "Cake";
+        break;
+    }
+
     // add this product to the db
     $newProduct = "INSERT INTO products (pName, pPrice, pDesc, pShelfLife, pType) 
                     VALUES ('$productName', '$productPrice', '$productDescription', '$productShelfLife', '$productType')";
     save($newProduct, "product");
+    $pid = $conn->lastInsertId();
+    if (isset($_FILES['fileField'])) {
+        $newname = "$typeString"."_$pid.jpg";
+        if(move_uploaded_file($_FILES['fileField']['tmp_name'], "../controller/$newname")) {
+            echo "File uploaded successfully!";
+          } else {
+            echo "Error uploading file!";
+          }
+    } 
     header("add-product.php");
 }
 ?>

@@ -1,0 +1,55 @@
+        .hero-section {
+            background-image: url('../assets/muffins-wallpaper.jpg'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh; 
+            color: white; 
+            position: relative;
+        }
+        .featured-section {
+            margin-top: 2rem; 
+            margin-bottom: 2rem; 
+        }
+        .cakes-section {
+            background: 
+            linear-gradient(rgb(54, 110, 184, 0.5), rgb(54, 110, 184, 0.5)), /* Gradient overlay */
+            url('../assets/cake-picture.jpg'); /* Background image */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 1px solid white;
+            border-top: none;
+        }
+
+        .pastries-section {
+            background: 
+                linear-gradient(rgb(54, 110, 184, 0.5), rgb(54, 110, 184, 0.5)), /* Gradient overlay */
+                url('../assets/buns-picture.jpg'); /* Background image */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 1px solid white;
+            border-top: none;
+        }
+
+        .cookies-section {
+            background: 
+                linear-gradient(rgb(54, 110, 184, 0.5), rgb(54, 110, 184, 0.5)), /* Gradient overlay */
+                url('../assets/cookies-picture.jpg'); /* Background image */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 1px solid white;
+            border-top: none;
+        }
+
+        .social-section {
+            background: 
+                linear-gradient(rgb(54, 110, 184, 0.5), rgb(54, 110, 184, 0.5)), /* Gradient overlay */
+                url('../assets/facebook-page-picture.jpg'); /* Background image */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 1px solid white;
+        }

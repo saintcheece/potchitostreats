@@ -20,9 +20,9 @@
                     Products
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <a class="dropdown-item" href="cakes.php">Cakes</a>
-                    <a class="dropdown-item" href="cookies.php">Cookies</a>
-                    <a class="dropdown-item" href="pastries.php">Pastries</a>
+                    <a class="dropdown-item" href="product-by-type.php?type=3">Cakes</a>
+                    <a class="dropdown-item" href="product-by-type.php?type=1">Cookies</a>
+                    <a class="dropdown-item" href="product-by-type.php?type=2">Pastries</a>
                 </div>
             </div>
             <a class="nav-link text-secondary" href="contact.php">Contact Us</a>
