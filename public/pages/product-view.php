@@ -1,10 +1,63 @@
 <?php
-    session_start();
-    require('../../controller/db_model.php');
+    require('../../controller/db_model_products.php');
 
+    $productID = filter_input(INPUT_POST, 'addToCart', FILTER_SANITIZE_STRING);
+    
+    // GET PRODUCT DETAILS
     $stmt = $conn->prepare("SELECT * FROM products WHERE pID = ?");
     $stmt->execute([$_GET['id']]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // GET TRANSACTION ID
+    $stmt = $conn->prepare("SELECT tID FROM transactions WHERE uID = ? AND tStatus= 1");
+    $stmt->execute([$_SESSION['userID']]);
+    $transactionID = $stmt->fetchColumn();
+
+    if(isset($_POST['cakeFlavor'], $_POST['cakeSize'], $_POST['cakeMessage'], $_POST['cakeInstructions'])){
+
+        echo "VALID";
+
+        if ($transactionID != null) {
+            // if order of product exists, increment the quantity
+            $stmt = $conn->prepare("SELECT oID FROM orders WHERE tID = ? AND pID = ?");
+            $stmt->execute([$transactionID, $_GET['id']]);
+            $orderID = $stmt->fetchColumn();
+            if ($orderID != null) {
+                $stmt = $conn->prepare("UPDATE orders SET oQty = oQty + 1 WHERE oID = ?");
+                $stmt->execute([$orderID]);
+            } else {
+                addCakeToTransaction($transactionID, $_GET['id'], $conn, $_POST);
+
+                // add this product to the db
+                $stmt = $conn->prepare("INSERT INTO orders (tID, pID, oQty) VALUES (?, ?, 1)");
+                $stmt->execute([$transactionID, $_GET['id']]);
+
+                header("Location: product-view.php?id=".$_GET['id']."&type=3");
+            }
+        } else {
+            // if no transaction exists, create one
+            $stmt = $conn->prepare("INSERT INTO transactions (uID, tType, tStatus) VALUES (?, 2, 1)");
+            $stmt->execute([$_SESSION['userID']]);
+            $transactionID = $conn->lastInsertId();
+            // then add the product
+            $stmt = $conn->prepare("INSERT INTO orders (tID, pID, oQty) VALUES (?, ?, 1)");
+            $stmt->execute([$transactionID, $_GET['id']]);
+
+            addCakeToTransaction($transactionID, $_GET['id'], $conn, $_POST);
+        }
+    }
+
+    function addCakeToTransaction($tID, $pID, $conn, $cakeDetails){
+        $stmt = $conn->prepare("INSERT INTO cakes (tID, pID, cFlavor, cSize, cMessage, cInstructions) VALUES (:tID, :pID, :cakeFlavor, :cakeSize, :cakeMessage, :cakeInstructions)");
+        $stmt->execute([
+            'tID' => $tID,
+            'pID' => $pID,
+            'cakeFlavor' => $cakeDetails['cakeFlavor'],
+            'cakeSize' => $cakeDetails['cakeSize'],
+            'cakeMessage' => $cakeDetails['cakeMessage'],
+            'cakeInstructions' => $cakeDetails['cakeInstructions']
+        ]);
+    }
 ?>
 
 
@@ -61,7 +114,7 @@
         <div class="custom-cake-image-container">
             <img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" alt="">
         </div>
-        <div class="form-container p-3">
+        <form action="product-view.php?id=<?= $_GET['id']?>&type=3" method="POST" class="form-container p-3">
             <h1><?= $product['pName']?></h1>
             <p id="description-cake">
                 <?= $product['pDesc']?>
@@ -73,36 +126,38 @@
             <div class="grid-container mt-1">
                 <div class="grid-item">
                     <p>Choose Cake Flavor</p>
-                    <select name="flavor" id="flavor">
-                        <option value="chocolate">Chocolate</option>
-                        <option value="vanilla">Vanilla</option>
-                        <option value="strawberry">Strawberry</option>
-                        <option value="red-velvet">Red Velvet</option>
+                    <select name="cakeFlavor" id="flavor">
+                        <option value="1">Chocolate</option>
+                        <option value="2">Vanilla</option>
+                        <option value="3">Strawberry</option>
+                        <option value="4">Red Velvet</option>
                     </select>
                 </div>
                 <div class="grid-item">
                     <p>Choose Cake Size</p>
-                    <select name="size" id="size">
-                        <option value="6-inch">6-inch</option>
-                        <option value="8-inch">8-inch</option>
-                        <option value="10-inch">10-inch</option>
-                        <option value="12-inch">12-inch</option>
+                    <select name="cakeSize" id="size">
+                        <option value="6">6-inch</option>
+                        <option value="8">8-inch</option>
+                        <option value="10">10-inch</option>
+                        <option value="12">12-inch</option>
                     </select>
                 </div>
                 <div class="grid-item full-width">
                     <label id="input-message">Input Message</label>
-                    <textarea name="message" id="message" placeholder="Enter your message..." maxlength="200"></textarea>
+                    <small><i>(only applies to dedicatable cakes)</i></small>
+                    <textarea name="cakeMessage" id="message" placeholder="Enter your message..." maxlength="200"></textarea>
                 </div>
                 <!-- Image upload field -->
                 <div class="grid-item">
                     <label for="" class="form-label">Upload Reference:</label><br>
-                    <input class="form-control" type="file" accept="image/*">
-                    <small>Max of 5mb</small>
+                    <input class="form-control" name="cakeReference" type="file" accept="image/*">
+                    <small> Maximum File Size of 5MB</small>
                 </div>
 
                 <div class="grid-item">
-                    <p>Quantity</p>
-                    <input class="form-control" type="number" min="1" step="1" value="1">
+                    <label for="" class="form-label">Quantity:</label><br>
+                    <input class="form-control" name="cakeQuantity" type="number" min="1" step="1" value="1">
+                    <small>Applies the Same Customizations</small>
                 </div>
 
                 <!-- Original message for the cake -->
@@ -111,32 +166,21 @@
                 <!-- Additional instructions with max char limit -->
                 <div class="grid-item full-width">
                     <p id="additional-instruction-p">Additional Instructions (optional)</p>
-                    <textarea name="instructions" id="instructions" maxlength="300" placeholder="Enter any special requests or instructions (max 300 characters)"></textarea>
+                    <textarea name="cakeInstructions" id="instructions" maxlength="300" placeholder="Enter any special requests or instructions (max 300 characters)"></textarea>
                 </div>
                 
                 <div class="divider m-2"></div>
 
                 <div class="total-and-cart">
                     <p class="total-price"><b>Total Price: $45.00</b></p>
-                    <button id="add-to-cart">Add to Cart</button>
+                    <button type="submit" name="addCakeToCart" id="add-to-cart">Add to Cart</button>
                 </div>
             </div>
-        </div>
+        </form>
     </section>
 
     <?php include 'layout/footer.php'; ?>
 
 </body>
-<script>
-    // Get today's date in YYYY-MM-DD format
-    const today = new Date();
-    const dd = String(today.getDate()).padStart(2, '0');
-    const mm = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
-    const yyyy = today.getFullYear();
-    const minDate = yyyy + '-' + mm + '-' + dd; // Format: YYYY-MM-DD
-    
-    // Set the min attribute
-    document.getElementById('pickup-date').setAttribute('min', minDate);
-</script>
 <?php }?>
 </html>

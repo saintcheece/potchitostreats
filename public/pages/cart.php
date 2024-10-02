@@ -16,6 +16,10 @@
     if(isset($_GET['remove'])){
         $stmt = $conn->prepare("DELETE FROM orders WHERE pID = ?");
         $stmt->execute([$_GET['remove']]);
+
+        $stmt = $conn->prepare("DELETE FROM cakes WHERE pID = ?");
+        $stmt->execute([$_GET['remove']]);
+
         header('cart.php');
     }
 
@@ -109,15 +113,33 @@
                     </thead>
                     <tbody>
                     <?php foreach($products as $product){ ?>
-                      <tr class="clickable-row" data-href="product-view.php?id=<?=$product['pID']?>&type=<?=$product['pType']?>">
-                        <td><a href="cart.php?remove=<?=$product['pID']?>" class="remove-item">×</a></td>
-                        <td><img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" alt="Cake Image" class="item-image"></td>
-                        <td><?=$product['pName']?></td>
-                        <td><?=$product['pPrice']?></td>
-                        <td><input type="number" value="<?=$product['oQty']?>" min="1" class="quantity-input"></td>
-                        <td>₱<?=$product['oQty'] * $product['pPrice']?></td>
-                      </tr>
-                    <?php }?>
+                        <tr class="clickable-row" data-href="product-view.php?id=<?=$product['pID']?>&type=<?=$product['pType']?>">
+                            <td><a href="cart.php?remove=<?=$product['pID']?>" class="remove-item">×</a></td>
+                            <td><img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" alt="Cake Image" class="item-image"></td>
+                            <td style="text-align:left;"><b><?=$product['pName']?></b></td>
+                            <td><?=$product['pPrice']?></td>
+                            <td><input type="number" value="<?=$product['oQty']?>" min="1" class="quantity-input"></td>
+                            <td>₱<?=$product['oQty'] * $product['pPrice']?></td>
+                        </tr>
+                        <?php if($product['pType'] == 3){?>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td colspan="6" style="text-align:left; margin-left:5px">
+                                    <?php 
+                                        $stmt = $conn->prepare("SELECT * FROM cakes WHERE tID = ? AND pID = ?");
+                                        $stmt->execute([$transaction, $product['pID']]);
+                                        $cake = $stmt->fetch(PDO::FETCH_ASSOC);
+                                    ?>
+                                    <div>
+                                        <small>Flavor: <?= $cake['cFlavor']?></small><br>
+                                        <small>Size: <?= $cake['cSize']?></small><br>
+                                        <small>Message: <?= $cake['cMessage']?></small><br>
+                                        <small>Instruction: <?= $cake['cInstructions']?></small><br>
+                                    </div>
+                            </tr>
+                        <?php }?>
+                        <?php }?>
                     </tbody>
                 </table>
                 <?php if(count($products) > 0){ ?>

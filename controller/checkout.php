@@ -73,14 +73,14 @@
 
     $res =  $response->getBody();
 
-    echo $res;
+    // echo $res;
 
     // AFTER TRANSACTION SHOULD REDIRECT TO SUCCESS PAGE (ORDERS PAGE) WHERE IT CHECKS IF isset(response[data][attributes][paid_at])
     //      it's a JSON, so di pa ako sure if nasend na once redirected
     //      if exists, then it should record as paid
 
-    // $checkout_url = json_decode($res, true);
+    $checkout_url = json_decode($res, true);
 
-    // header("Location: " . $checkout_url['data']['attributes']['checkout_url']);
+    header("Location: " . $checkout_url['data']['attributes']['checkout_url']);
 
 ?>
