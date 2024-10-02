@@ -1,4 +1,3 @@
-<?php session_start();?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,7 +28,7 @@ body{
 }
 #contact-us h1{
     margin-top: 2em;
-    color: #254ac5;
+    color:#346cbc;
     font-size: 2.3em;
 }
 #contact-us p{
@@ -41,7 +40,7 @@ body{
     display: flex;
     flex-direction: column;
     align-items: left;
-    border: 3px solid #254ac5;
+    border: 3px solid #346cbc;
     width: 40%;
     border-radius: 5px;
     padding: 2em;
@@ -71,7 +70,7 @@ body{
     padding: 0.5em;
     border: 1px solid #4b4b4b;
     border-radius: 5px;
-    background-color: #254ac5;
+    background-color:#346cbc;
     color: white;
     font-size: 1em;
     font-weight: 500;
