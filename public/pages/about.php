@@ -8,54 +8,7 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="test.css">
-    <style>
-       *,::before,::after{
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-body{
-    font-family: 'Poppins', sans-serif;
-    background-color: #ffffff;
-
-}
-#about-us{
-    display: flex;
-    align-items: center;
-    height: 100vh;
-    flex-direction: row;
-}
-#text-container{
-    display: flex;
-    flex-direction: column;
-    align-items: left;
-    width: 50%;
-    height: 100%;
-    background-color: #ffffff;
-    padding: 9rem 1.7rem 0rem 3rem;
-}
-#text-container h1{
-    font-size: 2.3rem;
-    color: #000000;
-    margin-bottom: 1rem;
-}
-#image-container{   
-    background-color: #ffffff;
-    width: 50%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-}
-#image-container img{
-    width: 60%;
-    height: 80%;
-    object-fit: cover;
-    margin-bottom: 3rem;
-}
-    </style>
+    <link rel="stylesheet" href="../css/about.css">
 </head>
 <body>
 

@@ -46,7 +46,7 @@
                     <!-- Example product row -->
                     <?php foreach($products as $product){ ?>
                         <tr>
-                            <td><img src="../public/assets/asdfimage.png" alt="Product Image" class="product-image"></td>
+                            <td><img src="../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" class="product-image"></td>
                             <td><?= $product['pName'] ?></td>
                             <td>₱<?= $product['pPrice'] ?></td>
                             <td>
@@ -56,6 +56,8 @@
                                 <a href="manage-products.php?toEnable=<?=$product['pID']?>" class="btn enable" style="text-decoration: none;" data-id="<?= $product['pID'] ?>">Enable</a>
                                 <?php } ?>
                                 <button class="btn delete" data-id="<?= $product['pID'] ?>">Delete</button>
+                                <button class="btn" data-id="<?= $product['pID'] ?>">Edit</button>
+                                <button class="btn" data-id="<?= $product['pID'] ?>">Feature</button>
                             </td>
                         </tr>
                     <?php } ?>

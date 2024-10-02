@@ -5,7 +5,6 @@ if (isset($_POST['productName'])) {
     $productName = filter_input(INPUT_POST, 'productName', FILTER_SANITIZE_STRING);
     $productPrice = filter_input(INPUT_POST, 'productPrice', FILTER_SANITIZE_STRING);
     $productDescription = filter_input(INPUT_POST, 'productDescription', FILTER_SANITIZE_STRING);
-    $productShelfLife = filter_input(INPUT_POST, 'productShelfLife', FILTER_SANITIZE_STRING);
     $productType = filter_input(INPUT_POST, 'productType', FILTER_SANITIZE_STRING);
 
     $typeString;
@@ -13,26 +12,27 @@ if (isset($_POST['productName'])) {
     switch($_POST['productType']){
         case 1: $typeString = "Cookie";
         break;
-        case 2: $typeString = "Pastries";
+        case 2: $typeString = "Pastry";
         break;
         case 3: $typeString = "Cake";
         break;
     }
 
     // add this product to the db
-    $newProduct = "INSERT INTO products (pName, pPrice, pDesc, pShelfLife, pType) 
-                    VALUES ('$productName', '$productPrice', '$productDescription', '$productShelfLife', '$productType')";
-    save($newProduct, "product");
+    $newProduct = "INSERT INTO products (pName, pPrice, pDesc, pType) 
+                   VALUES ('$productName', '$productPrice', '$productDescription', '$productType')";
+    $stmt = $conn->prepare($newProduct);
+    $stmt->execute();
     $pid = $conn->lastInsertId();
     if (isset($_FILES['fileField'])) {
         $newname = "$typeString"."_$pid.jpg";
-        if(move_uploaded_file($_FILES['fileField']['tmp_name'], "../controller/$newname")) {
-            echo "File uploaded successfully!";
+        if(move_uploaded_file($_FILES['fileField']['tmp_name'], "../product-gallery/$newname")) {
+            // echo "File uploaded successfully!";
           } else {
-            echo "Error uploading file!";
+            // echo "Error uploading file!";
           }
     } 
-    header("add-product.php");
+    header("Location: manage-products.php");
 }
 ?>
 
@@ -53,7 +53,7 @@ if (isset($_POST['productName'])) {
         
         <main>
             <h1 class="page-title">Add New Product</h1>
-            <form action="add-product.php" method="POST" class="add-product-form">
+            <form action="add-product.php" method="POST" class="add-product-form" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="fileField">Product Image:</label>
                     <input type="file" id="fileField" name="fileField">
@@ -71,16 +71,11 @@ if (isset($_POST['productName'])) {
                     <input type="number" id="product-price" name="productPrice" step="0.01" placeholder="Enter product price" required>
                 </div>
                 <div class="form-group">
-                    <label for="productShelfLife">Product Shelf Life:</label>
-                    <input type="number" id="product-shelflife" name="productShelfLife" step="0.01" placeholder="Enter product shelf life" required>
-                </div>
-                <div class="form-group">
                     <label for="productType">Product Type:</label>
                     <select id="product-type" name="productType" required>
                         <option value="">Select a category</option>
-                        <option value="0">Miscellaneous</option>
-                        <option value="1">Buns</option>
-                        <option value="2">Cookies</option>
+                        <option value="1">Cookies</option>
+                        <option value="2">Buns</option>
                         <option value="3">Cake</option>
                     </select>
                 </div>

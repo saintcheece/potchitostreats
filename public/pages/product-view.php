@@ -1,60 +1,38 @@
+<?php
+    session_start();
+    require('../../controller/db_model.php');
+
+    $stmt = $conn->prepare("SELECT * FROM products WHERE pID = ?");
+    $stmt->execute([$_GET['id']]);
+    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/product-view.css">
+
 <?php if($_GET['type'] != 3){?>
     <title>Product Page</title> 
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="test.css">
-    <style>
-        .container-product {
-            background-color: rgb(54, 110, 184);
-            height: 90vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .card-container {
-            background-color: white;
-            width: 80%;
-            height: 90%;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: row;
-        }
-        .card-container img {
-            width: 50%; /* Adjust to your desired size */
-            height: 100%;
-            object-fit: cover;
-            border-radius: 10px 0 0 10px;
-        }
-        .product-details {
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; /* Stack items vertically */
-            justify-content: center; /* Center items vertically */
-            width: 50%; /* Ensure it takes the remaining space beside the image */
-        }
-        .custom-input {
-    width: 200px; /* Set your desired width */
-    }
-
-    </style>
     </head>
     <body>
 
         <?php include 'layout/header.php'; ?>
         <section class="container-product">
             <div class="card-container">
-                <img src="assets/cake-picture.jpg" alt="Product Image">
+                <img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" alt="Product Image">
                 <div class="product-details">
-                    <h1>Product Name</h1>
-                    <p>Product Description</p>
-                    <p>Price: PESOS SIGN: 100.00 </p>
+                    <h1><?= $product['pName']?></h1>
+                    <p><?= $product['pDesc']?></p>
+                    <p>₱ <?= $product['pPrice']?> </p>
                     
+                    <?php if(isset($_SESSION['userID'])){?>
                     <!-- Quantity input -->
                     <div class="input-group mb-3">
                         <span class="input-group-text">Quantity</span>
@@ -62,6 +40,7 @@
                         </div>
 
                     <button class="btn btn-primary mt-2" style="width: 200px;">Add to Cart</button>
+                    <?php }?>
                 </div>
             </div>
         </section>
@@ -74,174 +53,24 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="test.css">
-    <style>
-        #background {
-            height: 160vh;
-            display: flex;
-            flex-direction: row;
-        }
-
-        .custom-cake-image-container {
-            width: 50%;
-            height: 100%;
-            background-color: rgb(47, 111, 201);
-            display: flex;
-            justify-content: center;
-            padding: 4em 0;
-        }
-
-        .custom-cake-image-container img {
-            width: 600px;
-            height: 500px;
-            object-fit: cover;
-            border-radius: 10px;
-            margin-bottom: 5em;
-        }
-
-        .form-container {
-            width: 50%;
-            background-color: #fff;
-            display: flex;
-            flex-direction: column;
-            padding: 3em;
-        }
-
-        .form-container h1 {
-            color: #2c5aaa;
-            font-size: 2rem;
-            margin-top: 1rem;
-        }
-
-        .form-container p {
-            color: #585858;
-            margin: 1rem 0;
-        }
-
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2em;
-            margin-top: 1.5em;
-        }
-
-        .grid-item p {
-            margin-bottom: 0.5em;
-        }
-
-        input[type="date"], select, textarea {
-            padding: 0.5rem;
-            margin-bottom: 1rem;
-            border: 1px solid #d1d1d1;
-            border-radius: 5px;
-            width: 100%;
-        }
-
-        .full-width {
-            grid-column: 1 / -1;
-        }
-
-        .divider {
-            grid-column: span 2;
-            border-top: 1px solid #d1d1d1;
-            margin: 1.5em 0;
-        }
-
-        .total-and-cart {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            grid-column: span 2;
-        }
-
-        .total-price {
-            margin: 0;
-        }
-
-        #add-to-cart {
-            background-color: #2c5aaa;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        #add-to-cart:hover {
-            background-color: #1e3f82;
-        }
-
-        #message {
-            resize: none;
-            height: 100px;
-        }
-
-        .file-upload {
-            grid-column: span 2;
-            margin-bottom: 1rem;
-        }
-
-        .file-upload input {
-            border: 1px solid #d1d1d1;
-            padding: 0.5rem;
-            border-radius: 5px;
-            width: 100%;
-        }
-
-        #instructions {
-            color: gray;
-            font-size: 0.85rem;
-            height: 100px;
-            resize: none;
-        }
-        #input-message{
-          margin-top: -1rem; /* Adjusted margin */
-
-        }
-        .file-upload p {
-          margin-top: -1rem
-        }
-        #additional-instruction-p{
-          margin-top: -1rem;
-        }
-    </style>
 </head>
 <body>
 
     <?php include 'layout/header.php'; ?>
     <section id="background">
         <div class="custom-cake-image-container">
-            <img src="assets/cake-with-transparent-background-high-quality-ultra-hd-free-photo.jpg" alt="">
+            <img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" alt="">
         </div>
-        <div class="form-container">
-            <h1>Cool Custom Cake Title</h1>
+        <div class="form-container p-3">
+            <h1><?= $product['pName']?></h1>
             <p id="description-cake">
-                Please fill in the details for your custom cake order. You can upload a reference image, specify pickup details, and leave additional instructions.
+                <?= $product['pDesc']?>
             </p>
             <p id="allergens"> May Contains Soy, Nut, Hotdog</p>
             <p>If you are ordering a custom cake, the baker will call you to ensure clarity </p>
 
             <hr />
-            <div class="grid-container">
-                <div class="grid-item">
-                    <p>Select Pickup Date</p>
-                    <input type="date" name="pickup-date" id="pickup-date" required>
-
-                </div>
-                <div class="grid-item">
-                    <p>Select Pickup Time</p>
-                    <select name="time" id="time">
-                        <option value="09:00">09:00 AM</option>
-                        <option value="10:00">10:00 AM</option>
-                        <option value="11:00">11:00 AM</option>
-                        <option value="12:00">12:00 PM</option>
-                        <option value="13:00">01:00 PM</option>
-                        <option value="14:00">02:00 PM</option>
-                        <option value="15:00">03:00 PM</option>
-                        <option value="16:00">04:00 PM</option>
-                        <option value="17:00">05:00 PM</option>
-                    </select>
-                </div>
+            <div class="grid-container mt-1">
                 <div class="grid-item">
                     <p>Choose Cake Flavor</p>
                     <select name="flavor" id="flavor">
@@ -261,13 +90,19 @@
                     </select>
                 </div>
                 <div class="grid-item full-width">
-                    <p id="input-message">Input Message</p>
+                    <label id="input-message">Input Message</label>
                     <textarea name="message" id="message" placeholder="Enter your message..." maxlength="200"></textarea>
                 </div>
                 <!-- Image upload field -->
-                <div class="file-upload">
-                    <p>Upload Reference Image (optional) Max 5MB</p>
-                    <input type="file" accept="image/*">
+                <div class="grid-item">
+                    <label for="" class="form-label">Upload Reference:</label><br>
+                    <input class="form-control" type="file" accept="image/*">
+                    <small>Max of 5mb</small>
+                </div>
+
+                <div class="grid-item">
+                    <p>Quantity</p>
+                    <input class="form-control" type="number" min="1" step="1" value="1">
                 </div>
 
                 <!-- Original message for the cake -->
@@ -278,8 +113,8 @@
                     <p id="additional-instruction-p">Additional Instructions (optional)</p>
                     <textarea name="instructions" id="instructions" maxlength="300" placeholder="Enter any special requests or instructions (max 300 characters)"></textarea>
                 </div>
-
-                <div class="divider"></div>
+                
+                <div class="divider m-2"></div>
 
                 <div class="total-and-cart">
                     <p class="total-price"><b>Total Price: $45.00</b></p>

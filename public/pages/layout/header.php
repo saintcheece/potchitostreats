@@ -32,7 +32,9 @@
         <?php 
           if(isset($_SESSION['userID']) && $_SESSION['userID'] != null) { ?>
             <div class="d-flex align-items-center">
+                <a class="nav-link text-secondary mr-3" href="user-profile.php"><i class="fas fa-user"></i>  Profile</a>
                 <a class="nav-link text-secondary mr-3" href="cart.php"><i class="fas fa-shopping-cart"></i> Cart</a>
+                <a class="nav-link text-secondary mr-3" href="cart.php"><i class="fas fa-box"></i> Orders</a>
                 <a class="btn btn-primary" href="../../logout.php">Log Out</a>
             </div>
         <?php }else{ ?>

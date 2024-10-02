@@ -1,0 +1,162 @@
+.container-product {
+    background-color: rgb(54, 110, 184);
+    height: 90vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.card-container {
+    background-color: white;
+    width: 80%;
+    height: 90%;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: row;
+}
+.card-container img {
+    width: 50%; /* Adjust to your desired size */
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px 0 0 10px;
+}
+.product-details {
+    padding: 20px; 
+    display: flex; 
+    flex-direction: column; /* Stack items vertically */
+    justify-content: center; /* Center items vertically */
+    width: 50%; /* Ensure it takes the remaining space beside the image */
+}
+.custom-input {
+width: 200px; /* Set your desired width */
+}
+
+
+
+#background {
+    height: 160vh;
+    display: flex;
+    flex-direction: row;
+}
+
+.custom-cake-image-container {
+    width: 50%;
+    height: 100%;
+    background-color: rgb(47, 111, 201);
+    display: flex;
+    justify-content: center;
+    padding: 4em 0;
+}
+
+.custom-cake-image-container img {
+    width: 600px;
+    height: 500px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 5em;
+}
+
+.form-container {
+    width: 50%;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 3em;
+}
+
+.form-container h1 {
+    color: #2c5aaa;
+    font-size: 2rem;
+    margin-top: 1rem;
+}
+
+.form-container p {
+    color: #585858;
+    margin: 1rem 0;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2em;
+    margin-top: 1.5em;
+}
+
+.grid-item p {
+    margin-bottom: 0.5em;
+}
+
+input[type="date"], select, textarea {
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #d1d1d1;
+    border-radius: 5px;
+    width: 100%;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.divider {
+    grid-column: span 2;
+    border-top: 1px solid #d1d1d1;
+    margin: 1.5em 0;
+}
+
+.total-and-cart {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    grid-column: span 2;
+}
+
+.total-price {
+    margin: 0;
+}
+
+#add-to-cart {
+    background-color: #2c5aaa;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#add-to-cart:hover {
+    background-color: #1e3f82;
+}
+
+#message {
+    resize: none;
+    height: 100px;
+}
+
+.file-upload {
+    grid-column: span 2;
+    margin-bottom: 1rem;
+}
+
+.file-upload input {
+    border: 1px solid #d1d1d1;
+    padding: 0.5rem;
+    border-radius: 5px;
+    width: 100%;
+}
+
+#instructions {
+    color: gray;
+    font-size: 0.85rem;
+    height: 100px;
+    resize: none;
+}
+#input-message{
+  margin-top: -1rem; /* Adjusted margin */
+
+}
+.file-upload p {
+  margin-top: -1rem
+}
+#additional-instruction-p{
+  margin-top: -1rem;
+}
