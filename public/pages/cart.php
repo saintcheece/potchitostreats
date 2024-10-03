@@ -14,17 +14,25 @@
 
     // X (remove an item) CLICKED
     if(isset($_GET['remove'])){
+
+        $stmt = $conn->prepare("SELECT pType FROM products WHERE pID = ?");
+        $stmt->execute([$_GET['remove']]);
+        $productType = $stmt->fetchColumn();
+
         $stmt = $conn->prepare("DELETE FROM orders WHERE pID = ?");
         $stmt->execute([$_GET['remove']]);
 
-        $stmt = $conn->prepare("DELETE FROM cakes WHERE pID = ?");
-        $stmt->execute([$_GET['remove']]);
+        if($productType = 3){
+            $stmt = $conn->prepare("DELETE FROM cakes WHERE pID = ?");
+            $stmt->execute([$_GET['remove']]);
+        }
 
         header('cart.php');
     }
 
     // CHECKOUT
     if (isset($_POST['checkout'])) {
+
         if($transaction){
             $stmt = $conn->prepare("UPDATE transactions SET tStatus = 2, tDateOrder = NOW() WHERE tID = ?");
             $stmt->execute([$transaction]);
@@ -63,7 +71,7 @@
 
         // ...GET TOTAL
         foreach($products as $product){
-            $total += $product['total'];
+            $total += ($product['pType'] === 3 ? $product['total'] / 2 : $product['total']);
         }
 
     }else{
@@ -112,20 +120,20 @@
                         </tr>
                     </thead>
                     <tbody>
-                    <?php foreach($products as $product){ ?>
+                    <?php 
+                    if(isset($products)){
+                        foreach($products as $product){ ?>
                         <tr class="clickable-row" data-href="product-view.php?id=<?=$product['pID']?>&type=<?=$product['pType']?>">
+
+                            <!-- REMOVE BUTTON -->
                             <td><a href="cart.php?remove=<?=$product['pID']?>" class="remove-item">×</a></td>
+
+                            <!-- PRODUCT IMAGE -->
                             <td><img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" alt="Cake Image" class="item-image"></td>
-                            <td style="text-align:left;"><b><?=$product['pName']?></b></td>
-                            <td><?=$product['pPrice']?></td>
-                            <td><input type="number" value="<?=$product['oQty']?>" min="1" class="quantity-input"></td>
-                            <td>₱<?=$product['oQty'] * $product['pPrice']?></td>
-                        </tr>
-                        <?php if($product['pType'] == 3){?>
-                            <tr>
-                                <td></td>
-                                <td></td>
-                                <td colspan="6" style="text-align:left; margin-left:5px">
+                            
+                            <!-- PRODUCT NAME (AND DETAILS IF CAKE) -->
+                            <td style="text-align:left;"><b><?=$product['pName']?></b>
+                                <?php if($product['pType'] == 3){?>
                                     <?php 
                                         $stmt = $conn->prepare("SELECT * FROM cakes WHERE tID = ? AND pID = ?");
                                         $stmt->execute([$transaction, $product['pID']]);
@@ -137,42 +145,87 @@
                                         <small>Message: <?= $cake['cMessage']?></small><br>
                                         <small>Instruction: <?= $cake['cInstructions']?></small><br>
                                     </div>
-                            </tr>
-                        <?php }?>
-                        <?php }?>
-                    </tbody>
+                                <?php }?>
+                            </td>
+
+                            <!-- ORDER PRICE -->
+                            <td>₱<?=$product['pPrice'] ?></td>
+
+                            <!-- ORDER QUANTITY -->
+                            <td><input type="number" value="<?=$product['oQty']?>" min="1" class="quantity-input"></td>
+
+                            <!-- TOTAL -->
+                            <td>
+                                <?php if($product['pType'] == 3){
+                                        echo "₱".number_format($product['pPrice'] * $product['oQty'] / 2, 2). " <small><i>(deposit)</i></small>";
+                                    }else{
+                                        echo "₱".number_format($product['pPrice'] * $product['oQty'], 2);
+                                }?>
+                            </td>
+                        </tr>
+                        <?php }}?>
+                    </tbody>   
                 </table>
-                <?php if(count($products) > 0){ ?>
+                <?php if(isset($products)){
+                    if(count($products) > 0){ ?>
                     <form action="cart.php" method="post">
                         <button class="empty-cart" name="emptyCart" value="<?= $transaction?>">Empty Cart</button>
                     </form>
-                <?php } ?>
+                <?php }} ?>
             </div>
             <div class="col-lg-3">
                 <!-- checkout -->
                 <div class="card position-sticky top-0 mb-1">
-                    <div class="p-3 bg-light bg-opacity-10">
+                    <form action="../../controller/checkout.php" class="p-3 bg-light bg-opacity-10">
                         <h6 class="card-title mb-3">Order Summary</h6>
+
+                        <?php if(isset($products)){?>
                         <?php foreach($products as $product){ ?>
-                        <div class="d-flex justify-content-between mb-1 small">
-                            <span><?= $product['pName']?> x<?= $product['oQty']?></span> <span>₱<?= $product['total']?> </span>
-                        </div>
+                            <div class="d-flex justify-content-between mb-1 small">
+                                <!-- RECEIPT CONTENTS -->
+                                <span><?=$product['pName'] . " x" . $product['oQty']?>
+                                    <?php if($product['pType'] == 3){ ?>
+                                        <small><i>(deposit)</i></small>
+                                        </span>
+                                        <span>
+                                            ₱<?= number_format($product['total'] / 2, 2)?>
+                                    <?php }else{?>
+                                        </span>
+                                        <span>
+                                            ₱ <?= number_format($product['pPrice'] * $product['oQty'], 2)?>
+                                    <?php }?>
+                                </span> 
+                            </div>
                         <?php } ?>
 
                         <hr>
                         <div class="d-flex justify-content-between mb-4 small">
-                            <span>TOTAL</span> <strong class="text-dark"><?= $total?></strong>
+                            <span>TOTAL</span> <strong class="text-dark">₱<?= number_format($total, 2)?></strong>
                         </div>
                         <div class="mb-1 small">
                             <label class="form-check-label text-muted" for="tnc">
                                 You have a custom cake in your cart. You will be contacted by our team for consultation after order is placed.
                             </label>
                         </div>
+                        <label for="date" class="form-label">Choose a date</label>
+                        <input class="form-control" type="date" id="date" name="date" value="<?= date('Y-m-d', strtotime('+5 days'))?>" min="<?= date('Y-m-d', strtotime('+5 days'))?>" required>
+                        <div class="invalid-feedback">
+                            Please choose a date.
+                        </div>
+                        <div class="d-flex justify-content-center">
+                            <div class="form-check my-3" >
+                            <input class="form-check-input" type="checkbox" value="" id="tnc" required>
+                            <label class="form-check-label" for="tnc">
+                                <small>I agree to the <a href="terms-and-conditions.php">terms and conditions</a></small>
+                            </label>
+                            </div>
+                        </div>
 
-                        <button class="btn btn-primary w-100 mt-2" onclick="window.location.href='../../controller/checkout.php';" <?php if(count($products) == 0) echo 'disabled';?>>
+                        <button class="btn btn-primary w-100 mt-2" <?php if(count($products) == 0) echo 'disabled';?>>
                             Proceed to Checkout
                         </button>
-                    </div>
+                        <?php }?>
+                    </form>
                 </div>
 
                 <!-- address -->

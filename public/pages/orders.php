@@ -1,4 +1,7 @@
-
+<?php
+    session_start();
+    require('../../controller/db_model.php');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,18 +28,18 @@
             border: 1px solid #a9a9a9; 
         }
         .nav-pills .nav-link {
-    border-radius: 0.5rem; 
-}
+            border-radius: 0.5rem; 
+        }
 
-.nav-pills .nav-link.active {
-    background-color: #254bc5; 
-    color: white;
-}
+        .nav-pills .nav-link.active {
+            background-color: #254bc5; 
+            color: white;
+        }
 
-.nav-pills .nav-link:hover {
-    background-color: #e1e1e1; 
-    color: #254bc5; 
-}
+        .nav-pills .nav-link:hover {
+            background-color: #e1e1e1; 
+            color: #254bc5; 
+        }
 
     </style>
 </head>

@@ -1,6 +1,11 @@
 <?php 
     session_start(); 
     require('../../controller/db_model.php'); 
+
+    
+    $stmt = $conn->prepare("SELECT * FROM products WHERE pVisibility = 1");
+    $stmt->execute();
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>

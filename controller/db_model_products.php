@@ -18,7 +18,7 @@
                                 <h5 class="card-title"><?= $product['pName'] ?></h5>
                                 <p class="card-text">₱<?= $product['pPrice'] ?></p>
                                 <?php if(isset($_SESSION['userID']) && $_SESSION['userID'] != null) { ?>
-                                    <form action="product-by-type.php" method="post">
+                                    <form action="<?= $product['pType'] == 3 ? 'product-view.php?id=' . $product['pID'] . '&type=3' : 'product-by-type.php' ?>" method="post">
                                         <input type="hidden" name="addToCart" value="<?= $product['pID'] ?>">
                                         <button type="submit">Add to Cart</button>
                                     </form>

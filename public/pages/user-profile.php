@@ -1,3 +1,12 @@
+<?php
+    session_start();
+    require('../../controller/db_model.php');
+
+    $stmt = $conn->prepare("SELECT * FROM users WHERE uID = :uID LIMIT 1");
+    $stmt->execute(['uID' => $_SESSION['userID']]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,11 +102,11 @@
                                 <h4 class="mb-4 mt-0">Contact Detail</h4>
                                 <div class="col-md-6">
                                     <label class="form-label">First Name *</label>
-                                    <input type="text" class="form-control" value="Scaralet" readonly>
+                                    <input type="text" class="form-control" value="<?= $user['uFName']?>" readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Last Name *</label>
-                                    <input type="text" class="form-control" value="Doe" readonly>
+                                    <input type="text" class="form-control" value="<?= $user['uLName']?>" readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Mobile number *</label>
@@ -105,7 +114,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="inputEmail4" class="form-label">Email *</label>
-                                    <input type="email" class="form-control" id="inputEmail4" value="example@homerealty.com" readonly>
+                                    <input type="email" class="form-control" id="inputEmail4" value="<?= $user['uEmail']?>" readonly>
                                 </div>
                             </div>
                             <div class="action-buttons mt-3">
@@ -148,20 +157,28 @@
                             <div class="row g-3">
                                 <h4 class="mb-4 mt-0">Primary Address</h4>
                                 <div class="col-md-6">
-                                    <label class="form-label">Country / Region *</label>
-                                    <input type="text" class="form-control" value="Philippines" readonly>
+                                    <label class="form-label">Home Address *</label>
+                                    <input type="text" class="form-control" value="<?= $user['uAddrHouseNum']?>" placeholder="Enter your House Number" readonly>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Town *</label>
-                                    <input type="text" class="form-control" placeholder="Enter your town" readonly>
+                                    <label class="form-label">Street *</label>
+                                    <input type="text" class="form-control" value="<?= $user['uAddrStreet']?>" placeholder="Enter your Street" readonly>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Barangay *</label>
-                                    <input type="text" class="form-control" placeholder="Enter your Barangay" readonly>
+                                    <label class="form-label">Town/ Baranggay *</label>
+                                    <input type="text" class="form-control" value="<?= $user['uAddrTown']?>" placeholder="Enter your Town/ Baranggay" readonly>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Street Address *</label>
-                                    <input type="text" class="form-control" placeholder="Enter your street address" readonly>
+                                    <label class="form-label">City *</label>
+                                    <input type="text" class="form-control" value="<?= $user['uAddrCity']?>" placeholder="Enter your City" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Province *</label>
+                                    <input type="text" class="form-control" value="<?= $user['uAddrProvince']?>" placeholder="Enter your Barangay" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Region *</label>
+                                    <input type="text" class="form-control" value="<?= $user['uAddrRegion']?>" placeholder="Enter your street address" readonly>
                                 </div>
                             </div>
                             <div class="action-buttons mt-3">
@@ -171,7 +188,7 @@
                             <button class="btn btn-primary edit-btn mt-3">Edit</button>
                         </div>
 
-                        <div class="bg-secondary-soft px-4 py-5 rounded mt-3">
+                        <!-- <div class="bg-secondary-soft px-4 py-5 rounded mt-3">
                             <div class="row g-3">
                                 <h4 class="mb-4 mt-0">Secondary Address</h4>
                                 <div class="col-md-6">
@@ -196,7 +213,7 @@
                                 <button class="btn btn-primary save-btn">Save</button>
                             </div>
                             <button class="btn btn-primary edit-btn mt-3">Edit</button>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 

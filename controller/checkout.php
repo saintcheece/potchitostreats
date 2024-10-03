@@ -21,10 +21,11 @@
     $stmt->execute([$transaction]);
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+
     $total = 0;
 
-    foreach ($orders as $order) {
-        $total += $order['total'];
+    foreach($orders as $order){
+        $total += ($order['pType'] === 3 ? $order['total'] / 2 : $order['total']);
     }
 
     $total *= 100;
@@ -38,10 +39,9 @@
         $line_items[] = array(
             "currency" => "PHP",
             "images" => array(
-                "http://localhost/potchitos/product-gallery/" . array('Cookie', 'Pastry', 'Cake')[$order['pType']-1]."_".$order['pID'].".jpg"
-            ),
-            "amount" => (int) ($order['pPrice'] * 100),
-            "name" => $order['pName'],
+                "http://localhost/potchitos/product-gallery/" . array('Cookie', 'Pastry', 'Cake')[$order['pType']-1]."_".$order['pID'].".jpg"),
+            "amount" => (int) ($order['pType'] === 3 ? $order['pPrice'] / 2 : $order['pPrice']) * 100,
+            "name" => $order['pType'] === 3 ? $order['pName'] . " (deposit)" : $order['pName'],
             "description" => "Enter Customizations Made Here",
             "quantity" => $order['oQty']
         );
@@ -59,7 +59,7 @@
                 "payment_method_types": [
                     "gcash"
                 ],
-                "success_url": "http://localhost/potchitos/public/pages/index.php",
+                "success_url": "http://localhost/potchitos/controller/check_payment.php",
                 "description": "Potchito\'s Buns x Cookies"
             }
         }
@@ -72,6 +72,7 @@
     ]);
 
     $res =  $response->getBody();
+    
 
     // echo $res;
 
@@ -79,8 +80,11 @@
     //      it's a JSON, so di pa ako sure if nasend na once redirected
     //      if exists, then it should record as paid
 
-    $checkout_url = json_decode($res, true);
+    $payment_json = json_decode($res, true);
 
-    header("Location: " . $checkout_url['data']['attributes']['checkout_url']);
+    $stmt = $conn->prepare("UPDATE transactions SET tPayID = ? WHERE tID = ?");
+    $stmt->execute([$payment_json['data']['id'], $transaction]);
+
+    header("Location: " . $payment_json['data']['attributes']['checkout_url']);
 
 ?>

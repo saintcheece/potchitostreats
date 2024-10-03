@@ -1,0 +1,90 @@
+{
+    "data": {
+      "id": "cs_hc2jAKUHsadtA4SCEtz7LG1Q",
+      "type": "checkout_session",
+      "attributes": {
+        "billing": {
+          "address": {
+            "city": null,
+            "country": null,
+            "line1": null,
+            "line2": null,
+            "postal_code": null,
+            "state": null
+          },
+          "email": null,
+          "name": null,
+          "phone": null
+        },
+        "billing_information_fields_editable": "enabled",
+        "cancel_url": "http://localhost/potchitos/public/pages/cart.php",
+        "checkout_url": "https://checkout.paymongo.com/cs_hc2jAKUHsadtA4SCEtz7LG1Q_client_YZQX2MoqH9nTpnFhVA5XS3qb#cGtfdGVzdF9SZVVvdzRrR0drVFhITGhLdXZDZ1oyQ2I=",
+        "client_key": "cs_hc2jAKUHsadtA4SCEtz7LG1Q_client_YZQX2MoqH9nTpnFhVA5XS3qb",
+        "customer_email": null,
+        "description": "Potchito's Buns x Cookies",
+        "line_items": [
+          {
+            "amount": 75000,
+            "currency": "PHP",
+            "description": "Enter Customizations Made Here",
+            "images": [
+              "http://localhost/potchitos/product-gallery/Cake_42.jpg"
+            ],
+            "name": "Minimal Cake (deposit)",
+            "quantity": 3
+          },
+          {
+            "amount": 45000,
+            "currency": "PHP",
+            "description": "Enter Customizations Made Here",
+            "images": [
+              "http://localhost/potchitos/product-gallery/Cookie_38.jpg"
+            ],
+            "name": "NYC-Style Cookie",
+            "quantity": 1
+          }
+        ],
+        "livemode": false,
+        "merchant": "Potchitos",
+        "origin": null,
+        "payments": [],
+        "payment_intent": {
+          "id": "pi_zYbtu9HiWyjsBqszL9htNUCY",
+          "type": "payment_intent",
+          "attributes": {
+            "amount": 270000,
+            "capture_type": "automatic",
+            "client_key": "pi_zYbtu9HiWyjsBqszL9htNUCY_client_RJYDzjdDLtep5Fx3SJSj52s5",
+            "currency": "PHP",
+            "description": "Potchito's Buns x Cookies",
+            "livemode": false,
+            "statement_descriptor": "Potchitos",
+            "status": "awaiting_payment_method",
+            "last_payment_error": null,
+            "payment_method_allowed": [
+              "gcash"
+            ],
+            "payments": [],
+            "next_action": null,
+            "payment_method_options": null,
+            "metadata": null,
+            "setup_future_usage": null,
+            "created_at": 1727898589,
+            "updated_at": 1727898589
+          }
+        },
+        "payment_method_types": [
+          "gcash"
+        ],
+        "reference_number": null,
+        "send_email_receipt": false,
+        "show_description": true,
+        "show_line_items": true,
+        "status": "active",
+        "success_url": "http://localhost/potchitos/public/pages/index.php",
+        "created_at": 1727898589,
+        "updated_at": 1727898589,
+        "metadata": null
+      }
+    }
+  }
