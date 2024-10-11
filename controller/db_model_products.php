@@ -20,7 +20,7 @@
                                 <?php if(isset($_SESSION['userID']) && $_SESSION['userID'] != null) { ?>
                                     <form action="<?= $product['pType'] == 3 ? 'product-view.php?id=' . $product['pID'] . '&type=3' : 'product-by-type.php' ?>" method="post">
                                         <input type="hidden" name="addToCart" value="<?= $product['pID'] ?>">
-                                        <button type="submit">Add to Cart</button>
+                                        <button class="btn btn-primary" type="submit">Add to Cart</button>
                                     </form>
                                 <?php }?> 
                             </div>

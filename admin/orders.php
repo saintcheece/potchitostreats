@@ -88,7 +88,7 @@
                         <button name='updateOrder' value=".$orders[$i]['tID']." class='btn update'>";
                     switch ($orders[$i]['tStatus']) {
                         case 2:
-                            echo "Confirm and Paid";
+                            echo "Accept Order";
                             break;
                         case 3:
                             echo "Done";

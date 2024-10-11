@@ -12,44 +12,41 @@
             margin-bottom: 2rem; 
         }
         .cakes-section {
-            background: 
-            linear-gradient(rgb(54, 110, 184, 0.5), rgb(54, 110, 184, 0.5)), /* Gradient overlay */
-            url('../assets/cake-picture.jpg'); /* Background image */
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            background-color: rgb(54, 110, 184);
+
             border: 1px solid white;
             border-top: none;
         }
 
         .pastries-section {
-            background: 
-                linear-gradient(rgb(54, 110, 184, 0.5), rgb(54, 110, 184, 0.5)), /* Gradient overlay */
-                url('../assets/buns-picture.jpg'); /* Background image */
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            background-color: rgb(247, 117, 208);
+
             border: 1px solid white;
             border-top: none;
         }
 
         .cookies-section {
-            background: 
-                linear-gradient(rgb(54, 110, 184, 0.5), rgb(54, 110, 184, 0.5)), /* Gradient overlay */
-                url('../assets/cookies-picture.jpg'); /* Background image */
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            background-color: rgb(54, 110, 184);
             border: 1px solid white;
             border-top: none;
         }
 
         .social-section {
             background: 
-                linear-gradient(rgb(54, 110, 184, 0.5), rgb(54, 110, 184, 0.5)), /* Gradient overlay */
+                linear-gradient(rgba(65, 65, 65, 0.5), rgba(73, 73, 73, 0.5)), /* Gradient overlay */
                 url('../assets/facebook-page-picture.jpg'); /* Background image */
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             border: 1px solid white;
         }
+        .card {
+            height: 390px; /* Set your desired fixed height */
+            overflow: hidden; /* Hide overflow if content exceeds height */
+        }
+        
+        .card-img-top {
+            height: 250px; /* Set a fixed height for the image */
+            object-fit: cover; /* Ensures the image covers the area without distortion */
+        }
+        

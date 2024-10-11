@@ -82,8 +82,8 @@
 
     $payment_json = json_decode($res, true);
 
-    $stmt = $conn->prepare("UPDATE transactions SET tPayID = ? WHERE tID = ?");
-    $stmt->execute([$payment_json['data']['id'], $transaction]);
+    $stmt = $conn->prepare("UPDATE transactions SET tPayID = ?, tDateClaim = ?, tPayStatus = 1, tDateOrder = NOW() WHERE tID = ?");
+    $stmt->execute([$payment_json['data']['id'], date("Y-m-d", strtotime($_POST['orderDate'])), $transaction]);
 
     header("Location: " . $payment_json['data']['attributes']['checkout_url']);
 

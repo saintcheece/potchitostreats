@@ -19,10 +19,12 @@
         $stmt->execute([$_GET['id'], $transactionID]);
         $count = $stmt->fetchColumn();
         if($count > 0){
-            $stmt = $conn->prepare("SELECT c.*, o.oQty, p.pPrice FROM cakes c
+            $stmt = $conn->prepare("SELECT c.*, o.oQty, cf.cfPrice, cs.csPrice, p.pPrice FROM cakes c
                                     INNER JOIN transactions t ON c.tID = t.tID
                                     INNER JOIN orders o ON t.tID = o.tID
                                     INNER JOIN products p ON o.pID = p.pID
+                                    INNER JOIN cakes_flavor cf ON p.pID = cf.pID    
+                                    INNER JOIN cakes_size cs ON p.pID = cs.pID
                                     WHERE o.pID = ? AND o.tID = ? LIMIT 1");
             $stmt->execute([$_GET['id'], $transactionID]);
             $cakeDetails = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -33,19 +35,33 @@
     if(isset($_POST['cakeFlavor'], $_POST['cakeSize'], $_POST['cakeMessage'], $_POST['cakeInstructions'])){
 
         if ($transactionID != null) {
-            // if order of product exists, increment the quantity
+            // if order of product exists, update the order details
             $stmt = $conn->prepare("SELECT oID FROM orders WHERE tID = ? AND pID = ?");
             $stmt->execute([$transactionID, $_GET['id']]);
             $orderID = $stmt->fetchColumn();
             if ($orderID != null) {
-                $stmt = $conn->prepare("UPDATE orders SET oQty = oQty + 1 WHERE oID = ?");
-                $stmt->execute([$orderID]);
+                echo "UPDATED";
+                $stmt = $conn->prepare("UPDATE orders SET oQty = ? WHERE oID = ?");
+                $stmt->execute([$_POST['cakeQuantity'], $orderID]);
+
+                if($_GET['type'] == 3){
+                    $stmt = $conn->prepare("UPDATE cakes SET cfID = ?, csID = ?, cMessage = ?, cInstructions = ? WHERE tID = ? AND pID = ?");
+                    $stmt->execute([
+                        $_POST['cakeFlavor'],
+                        $_POST['cakeSize'],
+                        $_POST['cakeMessage'],
+                        $_POST['cakeInstructions'],
+                        $transactionID,
+                        $_GET['id']
+                    ]);
+                }
+                header("Location: cart.php");
             } else {
                 if($_GET['type'] == 3){ addCakeToTransaction($transactionID, $_GET['id'], $conn, $_POST); }
 
                 // add this product to the db
-                $stmt = $conn->prepare("INSERT INTO orders (tID, pID, oQty) VALUES (?, ?, 1)");
-                $stmt->execute([$transactionID, $_GET['id']]);
+                $stmt = $conn->prepare("INSERT INTO orders (tID, pID, oQty) VALUES (?, ?, ?)");
+                $stmt->execute([$transactionID, $_GET['id'], $_POST['cakeQuantity']]);
 
                 header("Location: cart.php");
             }
@@ -55,15 +71,15 @@
             $stmt->execute([$_SESSION['userID']]);
             $transactionID = $conn->lastInsertId();
             // then add the product
-            $stmt = $conn->prepare("INSERT INTO orders (tID, pID, oQty) VALUES (?, ?, 1)");
-            $stmt->execute([$transactionID, $_GET['id']]);
+            $stmt = $conn->prepare("INSERT INTO orders (tID, pID, oQty) VALUES (?, ?, ?)");
+            $stmt->execute([$transactionID, $_GET['id'], $_POST['cakeQuantity']]);
 
             if($_GET['type'] == 3){ addCakeToTransaction($transactionID, $_GET['id'], $conn, $_POST); }
         }
     }
 
     function addCakeToTransaction($tID, $pID, $conn, $cakeDetails){
-        $stmt = $conn->prepare("INSERT INTO cakes (tID, pID, cFlavor, cSize, cMessage, cInstructions) VALUES (:tID, :pID, :cakeFlavor, :cakeSize, :cakeMessage, :cakeInstructions)");
+        $stmt = $conn->prepare("INSERT INTO cakes (tID, pID, cfID, csID, cMessage, cInstructions) VALUES (:tID, :pID, :cakeFlavor, :cakeSize, :cakeMessage, :cakeInstructions)");
         $stmt->execute([
             'tID' => $tID,
             'pID' => $pID,
@@ -82,9 +98,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/product-view.css">
+    <title><?= $product['pName']?></title> 
 
 <?php if($_GET['type'] != 3){?>
-    <title>Product Page</title> 
+    
+    <!-- ===================================================================================================================================================== -->
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
@@ -117,7 +135,7 @@
         
     </body>
 <?php }else{?>
-    <title>Product Page</title>
+<!-- =========================================================================================================================================================== -->
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
@@ -126,6 +144,7 @@
 
     <?php include 'layout/header.php'; ?>
     <section id="background">
+        <!-- CAKE IMAGE -->
         <div class="custom-cake-image-container">
             <img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" alt="">
         </div>
@@ -140,36 +159,41 @@
             <hr />
             <div class="grid-container mt-1">
                 <div class="grid-item">
+                    <!-- CAKE FLAVOR -->
                     <p>Choose Cake Flavor</p>
                     <select name="cakeFlavor" id="flavor">
                         <?php
-                            $flavors = array(
-                                'Chocolate' => 1,
-                                'Vanilla' => 2,
-                                'Strawberry' => 3,
-                                'Red Velvet' => 4
-                            );
+                            $stmt = $conn->prepare("SELECT * FROM cakes_flavor WHERE pID = ?");
+                            $stmt->execute([$product['pID']]);
+                            $flavors = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                            foreach($flavors as $name => $id){
-                                $selected = isset($cakeDetails['cFlavor']) && $cakeDetails['cFlavor'] == $id ? 'selected' : '';
-                                echo "<option value='$id' $selected>$name</option>";
+                            foreach($flavors as $flavor){
+                                $selected = isset($cakeDetails['cfID']) && $cakeDetails['cfID'] == $flavor['cfID'] ? 'selected' : '';
+                                echo "<option value='{$flavor['cfID']}' data-flavorPrice='{$flavor['cfPrice']}' $selected>{$flavor['cfName']}</option>";
                             }
                         ?>
                     </select>
                 </div>
                 <div class="grid-item">
+                    <!-- CAKE SIZE -->
                     <p>Choose Cake Size</p>
                     <select name="cakeSize" id="size">
-                        <option value="6" <?php if(isset($cakeDetails['cSize']) && $cakeDetails['cSize'] == 6) echo 'selected'; ?>>6-inch</option>
-                        <option value="8" <?php if(isset($cakeDetails['cSize']) && $cakeDetails['cSize'] == 8) echo 'selected'; ?>>8-inch</option>
-                        <option value="10" <?php if(isset($cakeDetails['cSize']) && $cakeDetails['cSize'] == 10) echo 'selected'; ?>>10-inch</option>
-                        <option value="12" <?php if(isset($cakeDetails['cSize']) && $cakeDetails['cSize'] == 12) echo 'selected'; ?>>12-inch</option>
+                        <?php
+                            $stmt = $conn->prepare("SELECT * FROM cakes_size WHERE pID = ?");
+                            $stmt->execute([$product['pID']]);
+                            $sizes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                            foreach($sizes as $size){
+                                $selected = isset($cakeDetails['csID']) && $cakeDetails['csID'] == $size['csID'] ? 'selected' : '';
+                                echo "<option value='{$size['csID']}' data-sizePrice='{$size['csPrice']}' $selected>{$size['csSize']}\"</option>";
+                            }
+                        ?>
                     </select>
                 </div>
                 <div class="grid-item full-width">
                     <label id="input-message">Input Message</label>
                     <small><i>(only applies to dedicatable cakes)</i></small>
-                    <textarea name="cakeMessage" id="message" placeholder="Enter your message..." maxlength="200"> <?php if(isset($cakeDetails['cMessage'])){ echo $cakeDetails['cMessage']; }?> </textarea>
+                    <textarea name="cakeMessage" id="message" placeholder="Enter your message..." maxlength="200"><?php if(isset($cakeDetails['cMessage'])){ echo $cakeDetails['cMessage']; }?></textarea>
                 </div>
                 <!-- Image upload field -->
                 <div class="grid-item">
@@ -179,7 +203,7 @@
 
                 <div class="grid-item">
                     <label for="" class="form-label">Quantity:</label><small><i>Applies the Same Customizations</i></small><br>
-                    <input class="form-control" name="cakeQuantity" type="number" min="1" step="1" <?php if(isset($cakeDetails["oQty"])){echo "value='".$cakeDetails["oQty"]."' ";}?>>
+                    <input class="form-control" name="cakeQuantity" type="number" min="1" step="1" value='<?php if(isset($cakeDetails["oQty"])){echo $cakeDetails["oQty"];}else{echo "1";}?>'>
                 </div>
 
                 <!-- Original message for the cake -->
@@ -194,8 +218,18 @@
                 <div class="divider m-2"></div>
 
                 <div class="total-and-cart">
-                    <p class="total-price"><b>Total Price: <?php if(isset($cakeDetails['pPrice'])){ echo $cakeDetails['pPrice'] * $cakeDetails['oQty'];}?></b></p>
-                    <button type="submit" name="addCakeToCart" id="add-to-cart">Add to Cart</button>
+                    <h3 class="total-price"><b>Total Price: <?php 
+                        if(isset($cakeDetails['cID'])){
+                            echo ($cakeDetails['pPrice'] + $cakeDetails['cfPrice'] + $cakeDetails['csPrice']) * $cakeDetails['oQty'];
+                        }else{
+                            echo $product['pPrice'];
+                        }
+                    ?></b></h3>
+                    <?php if(isset($cakeDetails['cID'])){ ?>
+                        <button type="submit" name="addCakeToCart" class="btn btn-outline-primary" >Save Changes</button>
+                    <?php }else{ ?>
+                        <button type="submit" name="addCakeToCart" id="add-to-cart">Add to Cart</button>
+                    <?php } ?>
                 </div>
             </div>
         </form>
@@ -204,5 +238,28 @@
     <?php include 'layout/footer.php'; ?>
 
 </body>
+    <script>
+        const inputs = document.querySelectorAll('input, select, textarea');
+        const price = document.getElementsByClassName('total-price')[0];
+
+        const updatePrice = () => {
+            const selectedFlavor = document.getElementById('flavor').options[document.getElementById('flavor').selectedIndex];
+            const selectedSize = document.getElementById('size').options[document.getElementById('size').selectedIndex];
+            price.firstChild.textContent = "Total Price: " + 
+                (<?php echo $product['pPrice'] ?> + 
+                Number(selectedFlavor.getAttribute('data-flavorPrice')) + 
+                Number(selectedSize.getAttribute('data-sizePrice')))
+                * Number(document.getElementsByName('cakeQuantity')[0].value);
+            };
+
+        updatePrice();
+
+        inputs.forEach(input => {
+            console.log("OKAY");
+            input.addEventListener('input', updatePrice);
+            input.addEventListener('change', updatePrice);
+        });
+    </script>
 <?php }?>
+
 </html>

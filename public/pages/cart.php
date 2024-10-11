@@ -2,6 +2,7 @@
 
     $total = 0;
     $products;
+    $prepTime = 0;
 
     require('../../controller/db_model.php');
 
@@ -56,14 +57,12 @@
 
         if($orders > 0){
             // ...GET PRODUCT DETAILS FOR EACH ORDER
-            $stmt = $conn->prepare("SELECT p.pID,
-                                    p.pType,
-                                    p.pName,
-                                    p.pPrice, 
-                                    o.oQty, 
-                                    (p.pPrice * o.oQty) AS total
+            $stmt = $conn->prepare("SELECT p.pID, p.pType, p.pName, p.pPrice,  o.oQty, ((p.pPrice + COALESCE(cf.cfPrice, 0) + COALESCE(cs.csPrice, 0))) AS total, p.pPrepTime
                                     FROM orders o
                                     INNER JOIN products p ON o.pID = p.pID
+                                    LEFT JOIN cakes c ON o.pID = c.pID
+                                    LEFT JOIN cakes_flavor cf ON c.cfID = cf.cfID
+                                    LEFT JOIN cakes_size cs ON c.csID = cs.csID
                                     WHERE o.tID = ?");
             $stmt->execute([$transaction]);
             $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -72,6 +71,7 @@
         // ...GET TOTAL
         foreach($products as $product){
             $total += ($product['pType'] === 3 ? $product['total'] / 2 : $product['total']);
+            $prepTime += ($product['pPrepTime'] * $product['oQty']);
         }
 
     }else{
@@ -123,7 +123,7 @@
                     <?php 
                     if(isset($products)){
                         foreach($products as $product){ ?>
-                        <tr class="clickable-row" data-href="product-view.php?id=<?=$product['pID']?>&type=<?=$product['pType']?>">
+                        <tr class="clickable-row" data-product-id="<?=$product['pID']?>" data-href="product-view.php?id=<?=$product['pID']?>&type=<?=$product['pType']?>">
 
                             <!-- REMOVE BUTTON -->
                             <td><a href="cart.php?remove=<?=$product['pID']?>" class="remove-item">×</a></td>
@@ -135,13 +135,17 @@
                             <td style="text-align:left;"><b><?=$product['pName']?></b>
                                 <?php if($product['pType'] == 3){?>
                                     <?php 
-                                        $stmt = $conn->prepare("SELECT * FROM cakes WHERE tID = ? AND pID = ?");
+                                        $stmt = $conn->prepare("SELECT * 
+                                                                FROM cakes c
+                                                                INNER JOIN cakes_flavor cf ON c.cfID = cf.cfID
+                                                                INNER JOIN cakes_size cs ON c.csID = cs.csID
+                                                                WHERE c.tID = ? AND c.pID = ?");
                                         $stmt->execute([$transaction, $product['pID']]);
                                         $cake = $stmt->fetch(PDO::FETCH_ASSOC);
                                     ?>
                                     <div>
-                                        <small>Flavor: <?= $cake['cFlavor']?></small><br>
-                                        <small>Size: <?= $cake['cSize']?></small><br>
+                                        <small>Flavor: <?= $cake['cfName']?></small><br>
+                                        <small>Size: <?= $cake['csSize']?></small><br>
                                         <small>Message: <?= $cake['cMessage']?></small><br>
                                         <small>Instruction: <?= $cake['cInstructions']?></small><br>
                                     </div>
@@ -149,18 +153,13 @@
                             </td>
 
                             <!-- ORDER PRICE -->
-                            <td>₱<?=$product['pPrice'] ?></td>
+                            <td>₱<?=$product['total'] ?></td>
 
                             <!-- ORDER QUANTITY -->
-                            <td><input type="number" value="<?=$product['oQty']?>" min="1" class="quantity-input"></td>
+                            <td><input type="number" value="<?=$product['oQty']?>" min="1" class="quantity-input product-qty"></td>
 
                             <!-- TOTAL -->
-                            <td>
-                                <?php if($product['pType'] == 3){
-                                        echo "₱".number_format($product['pPrice'] * $product['oQty'] / 2, 2). " <small><i>(deposit)</i></small>";
-                                    }else{
-                                        echo "₱".number_format($product['pPrice'] * $product['oQty'], 2);
-                                }?>
+                            <td class="subtotal">
                             </td>
                         </tr>
                         <?php }}?>
@@ -176,42 +175,61 @@
             <div class="col-lg-3">
                 <!-- checkout -->
                 <div class="card position-sticky top-0 mb-1">
-                    <form action="../../controller/checkout.php" class="p-3 bg-light bg-opacity-10">
+                    <form action="../../controller/checkout.php" method="POST" class="p-3 bg-light bg-opacity-10">
                         <h6 class="card-title mb-3">Order Summary</h6>
 
-                        <?php if(isset($products)){?>
-                        <?php foreach($products as $product){ ?>
+                        <?php 
+                        if(isset($products)){
+                            foreach($products as $product){ ?>
+
                             <div class="d-flex justify-content-between mb-1 small">
                                 <!-- RECEIPT CONTENTS -->
                                 <span><?=$product['pName'] . " x" . $product['oQty']?>
-                                    <?php if($product['pType'] == 3){ ?>
-                                        <small><i>(deposit)</i></small>
-                                        </span>
-                                        <span>
-                                            ₱<?= number_format($product['total'] / 2, 2)?>
-                                    <?php }else{?>
-                                        </span>
-                                        <span>
-                                            ₱ <?= number_format($product['pPrice'] * $product['oQty'], 2)?>
-                                    <?php }?>
+                                    <span class="summary-price">
+                                    </span> 
                                 </span> 
                             </div>
+
                         <?php } ?>
 
                         <hr>
                         <div class="d-flex justify-content-between mb-4 small">
-                            <span>TOTAL</span> <strong class="text-dark">₱<?= number_format($total, 2)?></strong>
+                            <span>TOTAL</span> <strong id="order-total" class="text-dark">₱</strong>
                         </div>
                         <div class="mb-1 small">
+                            <?php if(in_array(3, array_column($products, 'pType'))){ ?>
                             <label class="form-check-label text-muted" for="tnc">
                                 You have a custom cake in your cart. You will be contacted by our team for consultation after order is placed.
                             </label>
+                            <?php } ?>
                         </div>
                         <label for="date" class="form-label">Choose a date</label>
-                        <input class="form-control" type="date" id="date" name="date" value="<?= date('Y-m-d', strtotime('+5 days'))?>" min="<?= date('Y-m-d', strtotime('+5 days'))?>" required>
+                        <?php
+                            // current day + (prep time(int as hours) + grace time(int as hours) rounded up to nearest day since input is date, not time)
+                            $timestamp = strtotime('+' . ($prepTime + 24) . ' hours');
+                            $timestamp = strtotime(date('Y-m-d', $timestamp) . ' + ' . ceil(($prepTime + 24) / 24) . ' hours');
+                        ?>
+                        <input class="form-control" type="date" id="date" name="orderDate" value="<?= date('Y-m-d', $timestamp)?>" min="<?= date('Y-m-d', $timestamp)?>" required>
                         <div class="invalid-feedback">
                             Please choose a date.
                         </div>
+                        <hr/>
+                            <p><b>Payment Type:</b></p>
+                            <div class="form-check my-2 mx-3">
+                                <input class="form-check-input" type="radio" name="paymentOption" id="fullPayment" value="fullPayment" 
+                                <?php if(!in_array(3, array_column($products, 'pType'))){ echo 'checked'; }else{ echo ''; }?>>
+                                <label class="form-check-label" for="fullPayment" value="1">
+                                    Full Payment
+                                </label>
+                            </div>
+                            <div class="form-check my-2 mx-3">
+                                <input class="form-check-input" type="radio" name="paymentOption" id="deposit" value="deposit" 
+                                <?php if(in_array(3, array_column($products, 'pType'))){ echo 'checked'; }else{ echo 'disabled'; }?>>
+                                <label class="form-check-label" for="deposit" value="2">
+                                    Deposit<small> (50% deposit on cakes)</small>
+                                </label>
+                            </div>
+                        <hr/>
                         <div class="d-flex justify-content-center">
                             <div class="form-check my-3" >
                             <input class="form-check-input" type="checkbox" value="" id="tnc" required>
@@ -237,10 +255,87 @@
 
 </body>
 <script>
+
+    var products = <?php 
+        echo json_encode(array_map(function($product) {
+            return array('price' => $product['total'], 
+                         'qty' => $product['oQty'],
+                         'pType' => $product['pType'],
+                         'pPrepTime' => $product['pPrepTime'] ?? null);
+        }, $products));
+    ?>;
+
+    $(document).ready(function(){
+        products.forEach(function(product, index){
+            $(".subtotal").eq(index).html("&#8369;"+(product.price*product.qty).toFixed(2));
+            $(".summary-price").eq(index).html("&#8369;"+(product.price*product.qty).toFixed(2));
+        });
+    });
+    transactionType = $("input[name='paymentOption']:checked").val() == '1' ? 1 : 2;
+
+    function updateSubtotal() {
+        var total = 0;
+        $(".subtotal").each(function(index){
+            var qty = $(".quantity-input").eq(index).val();
+            if(products[index].pType != 3){
+                total += products[index].price*qty;
+                $(this).html("&#8369;"+(products[index].price*qty).toFixed(2));
+                $(".summary-price").eq(index).html("&#8369;"+(products[index].price*qty).toFixed(2));
+            } else {
+                total += products[index].price*qty/(transactionType == 1 ? 1 : 2);
+                $(this).html("&#8369;"+(products[index].price*qty/(transactionType == 1 ? 1 : 2)).toFixed(2));
+                $(".summary-price").eq(index).html("&#8369;"+(products[index].price*qty/(transactionType == 1 ? 1 : 2)).toFixed(2));
+            }
+        });
+
+        var date = new Date($("#date").val());
+        date.setHours(date.getHours() + products.reduce((acc, curr) => acc + (curr.pType == 3 ? curr.pPrepTime : 0), 0));
+        $("#date").val(date.toISOString().split('T')[0]);
+        $("#order-total").html("&#8369;"+total.toFixed(2));
+    }
+
+    $('input[name="paymentOption"]').on('change', function() {
+        transactionType = $("input[name='paymentOption']:checked").val() == 'fullPayment' ? 1 : 2;
+        updateSubtotal();
+    });
+
+
     jQuery(document).ready(function($) {
         $(".clickable-row").click(function() {
             window.location = $(this).data("href");
         });
+        updateSubtotal();
     });
+    
+    // Add the click event to the product-qty elements
+    $(".product-qty").click(function(e) {
+        e.stopPropagation();
+    });
+
+
+    
+
+    $(".quantity-input").change(function(){
+        var index = $(this).closest('.product-qty').index('.product-qty');
+        var qty = $(this).val();
+        var orderId = <?= $transaction ?>;
+        var productId = $(this).closest('tr').data('product-id');
+
+        $.ajax({
+            url: '../../controller/cart_model.php',
+            type: 'POST',
+            data: {
+                orderId: orderId,
+                productId: productId,
+                quantity: qty
+            },
+            success: function(data) {
+                console.log(productId);
+            }
+        });
+        updateSubtotal();
+    });
+
+
 </script>
 </html>
