@@ -104,8 +104,7 @@
 
     <?php include 'layout/header.php'; ?>
 
-    <section id="cart-section">
-        <h1 class="h3 mt-1 mb-2 ml-5">Your Cart</h1>
+    <section id="cart-section" class="p-2">
         <div class="cart-content">
             <div class="cart-items">
                 <table>
@@ -203,27 +202,28 @@
                             </label>
                             <?php } ?>
                         </div>
-                        <label for="date" class="form-label">Choose a date</label>
+                        <label for="date" class="form-label">Choose pickup date</label>
                         <?php
                             // current day + (prep time(int as hours) + grace time(int as hours) rounded up to nearest day since input is date, not time)
                             $timestamp = strtotime('+' . ($prepTime + 24) . ' hours');
                             $timestamp = strtotime(date('Y-m-d', $timestamp) . ' + ' . ceil(($prepTime + 24) / 24) . ' hours');
                         ?>
                         <input class="form-control" type="date" id="date" name="orderDate" value="<?= date('Y-m-d', $timestamp)?>" min="<?= date('Y-m-d', $timestamp)?>" required>
+                        <small class="text-muted" >date is subject to change once confirmed</small>
                         <div class="invalid-feedback">
                             Please choose a date.
                         </div>
                         <hr/>
                             <p><b>Payment Type:</b></p>
                             <div class="form-check my-2 mx-3">
-                                <input class="form-check-input" type="radio" name="paymentOption" id="fullPayment" value="fullPayment" 
+                                <input class="form-check-input" type="radio" name="paymentOption" id="fullPayment" value="1" 
                                 <?php if(!in_array(3, array_column($products, 'pType'))){ echo 'checked'; }else{ echo ''; }?>>
                                 <label class="form-check-label" for="fullPayment" value="1">
                                     Full Payment
                                 </label>
                             </div>
                             <div class="form-check my-2 mx-3">
-                                <input class="form-check-input" type="radio" name="paymentOption" id="deposit" value="deposit" 
+                                <input class="form-check-input" type="radio" name="paymentOption" id="deposit" value="2" 
                                 <?php if(in_array(3, array_column($products, 'pType'))){ echo 'checked'; }else{ echo 'disabled'; }?>>
                                 <label class="form-check-label" for="deposit" value="2">
                                     Deposit<small> (50% deposit on cakes)</small>
@@ -289,13 +289,19 @@
         });
 
         var date = new Date($("#date").val());
-        date.setHours(date.getHours() + products.reduce((acc, curr) => acc + (curr.pType == 3 ? curr.pPrepTime : 0), 0));
-        $("#date").val(date.toISOString().split('T')[0]);
+        var minDate = new Date();
+        var prepTimeHours = products.reduce((acc, curr) => acc + (curr.pPrepTime * $(".quantity-input").eq(products.indexOf(curr)).val()), 0);
+        var daysAhead = Math.ceil(prepTimeHours / 24);
+        minDate.setDate(minDate.getDate() + daysAhead);
+        $("#date").attr("min", minDate.toISOString().split('T')[0]);
+        $("#date").val(minDate.toISOString().split('T')[0]);
         $("#order-total").html("&#8369;"+total.toFixed(2));
     }
 
+    updateSubtotal();
+
     $('input[name="paymentOption"]').on('change', function() {
-        transactionType = $("input[name='paymentOption']:checked").val() == 'fullPayment' ? 1 : 2;
+        transactionType = $("input[name='paymentOption']:checked").val() == '1' ? 1 : 2;
         updateSubtotal();
     });
 

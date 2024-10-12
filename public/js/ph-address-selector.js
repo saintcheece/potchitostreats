@@ -183,12 +183,6 @@ $(function() {
     dropdown.empty();
     dropdown.append('<option selected="true" disabled>Choose Region</option>');
     dropdown.prop('selectedIndex', 0);
-    const url = '/potchitos/public/js/ph/region.json';
-    // Populate dropdown with list of regions
-    $.getJSON(url, function(data) {
-        $.each(data, function(key, entry) {
-            dropdown.append($('<option></option>').attr('value', entry.region_code).text(entry.region_name));
-        })
-    });
+    dropdown.append('<option value="03">Region III (Central Luzon)</option>');
 
 });

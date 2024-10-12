@@ -3,7 +3,7 @@
     require('../../controller/db_model.php');
 
     // GET ALL TRANSACTIONS
-    $stmt = $conn->prepare("SELECT tID, tType, tDateOrder, tDateClaim, tPayStatus, tStatus FROM transactions WHERE uID = ? ORDER BY tID DESC");
+    $stmt = $conn->prepare("SELECT tID, tType, tDateOrder, tDateClaim, tPayStatus, tStatus, tPayRemain FROM transactions WHERE uID = ? ORDER BY tID DESC");
     $stmt->execute([$_SESSION['userID']]);
     $allTransactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -103,7 +103,7 @@
                             <?php }?>
                         </div>
                         <?php if($transaction['tPayStatus'] == 1 && $transaction['tStatus'] < 5 && $transaction['tStatus'] > 0){ ?>
-                            <p class="mb-0 text-black text-primary pt-2"><span class="text-black font-weight-bold"> Pending Balance:</span> <?= $pendingPayment ?></p>
+                            <p class="mb-0 text-black text-primary pt-2"><span class="text-black font-weight-bold"> Pending Balance:</span> <?= $transaction['tPayRemain'] ?></p>
                             <small>Only payable once pick up is ready</small>
                         <?php }else{ ?>
                             <p class="mb-0 text-primary pt-2"><span class="font-weight-bold text-primary"><h2>₱<?= $totalPayment?></h2></span></p>

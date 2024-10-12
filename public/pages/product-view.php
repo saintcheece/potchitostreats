@@ -228,7 +228,11 @@
                     <?php if(isset($cakeDetails['cID'])){ ?>
                         <button type="submit" name="addCakeToCart" class="btn btn-outline-primary" >Save Changes</button>
                     <?php }else{ ?>
-                        <button type="submit" name="addCakeToCart" id="add-to-cart">Add to Cart</button>
+                        <?php if(!isset($_SESSION['userID'])){ ?>
+                            <a href="login.php" class="btn btn-outline-primary" >Log in to Add to Cart</a>
+                        <?php }else{ ?>
+                            <button type="submit" name="addCakeToCart" id="add-to-cart">Add to Cart</button>
+                        <?php } ?>
                     <?php } ?>
                 </div>
             </div>

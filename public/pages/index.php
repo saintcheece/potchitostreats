@@ -45,8 +45,7 @@
         <div class="carousel" data-flickity='{ "groupCells": true, "wrapAround": true, "cellAlign": "left", "prevNextButtons": true, "pageDots": false }'>
             <?php foreach ($products as $product) { ?>
                 <div class="card mx-2" style="width: 20rem;">
-                    <a href="product-view.php?id=<?= $product['pID']?>&type=<?=$product['pType']?>" class="product-link">
-                    <img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" class="card-img-top">
+                    <a href="product-view.php?id=<?= $product['pID']?>&type=<?=$product['pType']?>" class="product-link">                    <img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" class="card-img-top">
                     <div class="card-body text-center">
                         <h5 class="card-title"><?= $product['pName'] ?></h5>
                         <p class="card-text">₱<?= $product['pPrice'] ?></p>

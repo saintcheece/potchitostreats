@@ -57,7 +57,7 @@
                                 <?php } ?>
                                 <button class="btn delete" data-id="<?= $product['pID'] ?>">Delete</button>
                                 <button class="btn" data-id="<?= $product['pID'] ?>">Edit</button>
-                                <button class="btn" data-id="<?= $product['pID'] ?>">Feature</button>
+                                <button class="btn success" data-id="<?= $product['pID'] ?>">Feature</button>
                             </td>
                         </tr>
                     <?php } ?>

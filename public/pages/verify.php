@@ -22,7 +22,8 @@
             'signCity' => $_POST['signCity'],
             'signTown' => $_POST['signTown'],
             'signStreet' => $_POST['signStreet'],
-            'signAddHouseNum' => $_POST['signAddHouseNum']
+            'signAddHouseNum' => $_POST['signAddHouseNum'],
+            'signPhoneNum' => $_POST['signPhoneNum']
         );
 
         if($_POST['inputCode'] == $_SESSION['verificationCode']){
@@ -31,7 +32,7 @@
 
             $hash = password_hash($_POST['signPass'], PASSWORD_BCRYPT);
 
-            $stmt = $conn->prepare("INSERT INTO users (uFName, uLName, uEmail, uPass, uAddrRegion, uAddrProvince, uAddrCity, uAddrTown, uAddrStreet, uAddrHouseNum) VALUES (:signNameFirst, :signNameLast, :signEmail, :signPass, :signRegion, :signProv, :signCity, :signTown, :signStreet, :signAddHouseNum)");
+            $stmt = $conn->prepare("INSERT INTO users (uFName, uLName, uEmail, uPass, uAddrRegion, uAddrProvince, uAddrCity, uAddrTown, uAddrStreet, uAddrHouseNum, uPhone) VALUES (:signNameFirst, :signNameLast, :signEmail, :signPass, :signRegion, :signProv, :signCity, :signTown, :signStreet, :signAddHouseNum, :signPhoneNum)");
             $stmt->execute(array(
                 ':signNameFirst' => $_POST['signNameFirst'],
                 ':signNameLast' => $_POST['signNameLast'],
@@ -42,7 +43,8 @@
                 ':signCity' => (string)$_POST['signCity'],
                 ':signTown' => (string)$_POST['signTown'],
                 ':signStreet' => (string)$_POST['signStreet'],
-                ':signAddHouseNum' => (string)$_POST['signAddHouseNum']
+                ':signAddHouseNum' => (string)$_POST['signAddHouseNum'],
+                ':signPhoneNum' => (string)$_POST['signPhoneNum']
             ));
             
             session_destroy();
@@ -153,6 +155,7 @@
                 <input type="hidden" name="signProv" id="signProv" value="<?php echo $_POST["signProv"] ?>">
                 <input type="hidden" name="signCity" id="signCity" value="<?php echo $_POST["signCity"] ?>">
                 <input type="hidden" name="signRegion" id="signRegion" value="<?php echo $_POST["signRegion"] ?>">
+                <input type="hidden" name="signPhoneNum" id="signPhoneNum" value="<?php echo $_POST["signPhoneNum"] ?>">
             </div>
             <button type="submit" class="btn btn-primary" name="isSubmitted" value="Verify">Verify</button>
         </form>

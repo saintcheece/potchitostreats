@@ -62,6 +62,23 @@
             margin-top: 5px;
         }
     </style>
+    <style>
+
+/* The message box is shown when the user clicks on the password field */
+#message {
+  display:none;
+}
+
+/* Add a green text color and a checkmark when the requirements are right */
+.valid {
+  color: green;
+}
+
+/* Add a red text color and an "x" when the requirements are wrong */
+.invalid {
+  color: red;
+}
+</style>
 </head>
 <body>
 
@@ -83,7 +100,19 @@
                 </div>
                 <div class="mb-3">
                     <label for="signPass" class="form-label">Password:</label><br>
-                    <input type="password" class="form-control" name="signPass" id="signPass" required pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" title="Password must be at least 8 characters long, contain at least one lowercase letter, one uppercase letter, one number, and one special character" onkeyup="checkPassword()">
+                    <input type="password" class="form-control" name="signPass" id="signPass" required pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" onkeyup="checkPassword()">
+                    <div class="d-flex justify-content-end">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="showPass" onclick="showPassword()">
+                        <small class="form-check-label" for="showPass">View Password</small>
+                    </div>
+                    </div>
+                    <small id="message" class="text-muted opacity-50">
+                        <p id="letter" class="invalid m-0" style="text-align:left;">a lowercase letter</p>
+                        <p id="capital" class="invalid m-0" style="text-align:left;">a capital (uppercase) letter</p>
+                        <p id="number" class="invalid m-0" style="text-align:left;">a number</p>
+                        <p id="length" class="invalid m-0" style="text-align:left;">8 characters</p>
+                    </small>
                 </div>
                 <div class="mb-3">
                     <label for="signPassConfirm" class="form-label">Confirm Password:</label><br>
@@ -118,7 +147,17 @@
                     <label for="signAddHouseNum" class="form-label">House Number:</label><br>
                     <input type="text" class="form-control" name="signAddHouseNum" id="signAddHouseNum">
                 </div>
-                <input type="submit" class="btn btn-primary" id="submitBtn" value="Submit" class="btn btn-primary">
+                <div class="mb-3">
+                    <label for="signPhoneNum" class="form-label">Phone Number:</label><br>
+                    <div class="input-group">
+                        <div class="input-group-text">+63</div>
+                        <input type="text" class="form-control" name="signPhoneNum" id="signPhoneNum" maxlength="10" minlength="10" pattern="[0-9]{10}" required>
+                    </div>
+                </div>
+                <div class="mb-3 d-flex justify-content-center">Already Have An Account? &nbsp;<a href="login.php">Log In Instead</a></div>
+                <div class="d-flex justify-content-end">
+                <input type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn" value="Submit" class="btn btn-primary">
+                </div>
             </form>
         </div>
     </div>
@@ -140,5 +179,74 @@
                 submitBtn.disabled = false;
             }
         }
+
+        function showPassword() {
+            if (document.getElementById('showPass').checked) {
+                document.getElementById('signPass').type = 'text';
+                document.getElementById('signPassConfirm').type = 'text';
+            } else {
+                document.getElementById('signPass').type = 'password';
+                document.getElementById('signPassConfirm').type = 'password';
+            }
+        }
     </script>
+    <script>
+        var myInput = document.getElementById("signPass");
+        var letter = document.getElementById("letter");
+        var capital = document.getElementById("capital");
+        var number = document.getElementById("number");
+        var length = document.getElementById("length");
+
+        // When the user clicks on the password field, show the message box
+        myInput.onfocus = function() {
+        document.getElementById("message").style.display = "block";
+        }
+
+        // When the user clicks outside of the password field, hide the message box
+        myInput.onblur = function() {
+        document.getElementById("message").style.display = "none";
+        }
+
+        // When the user starts to type something inside the password field
+        myInput.onkeyup = function() {
+        // Validate lowercase letters
+        var lowerCaseLetters = /[a-z]/g;
+        if(myInput.value.match(lowerCaseLetters)) {  
+            letter.classList.remove("invalid");
+            letter.classList.add("valid");
+        } else {
+            letter.classList.remove("valid");
+            letter.classList.add("invalid");
+        }
+        
+        // Validate capital letters
+        var upperCaseLetters = /[A-Z]/g;
+        if(myInput.value.match(upperCaseLetters)) {  
+            capital.classList.remove("invalid");
+            capital.classList.add("valid");
+        } else {
+            capital.classList.remove("valid");
+            capital.classList.add("invalid");
+        }
+
+        // Validate numbers
+        var numbers = /[0-9]/g;
+        if(myInput.value.match(numbers)) {  
+            number.classList.remove("invalid");
+            number.classList.add("valid");
+        } else {
+            number.classList.remove("valid");
+            number.classList.add("invalid");
+        }
+        
+        // Validate length
+        if(myInput.value.length >= 8) {
+            length.classList.remove("invalid");
+            length.classList.add("valid");
+        } else {
+            length.classList.remove("valid");
+            length.classList.add("invalid");
+        }
+        }
+</script>
 </html>
