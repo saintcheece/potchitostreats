@@ -83,10 +83,13 @@
                 echo $orders[$i]['tDateOrder'];
                 echo "</td>";
                 // ACTIONS
-                if($orders[$i]['tStatus'] < 5){
+                if($orders[$i]['tStatus'] < 6){
                     echo "<td>
                         <button name='updateOrder' value=".$orders[$i]['tID']." class='btn update'>";
                     switch ($orders[$i]['tStatus']) {
+                        case -1:
+                            echo "Conform Cancellation";
+                            break;
                         case 2:
                             echo "Accept Order";
                             break;
@@ -94,11 +97,10 @@
                             echo "Done";
                             break;
                         case 4:
-                            if($orders[$i]['tType'] == 1){
-                                echo "Received";
-                            }else{
-                                echo "Picked Up";
-                            }
+                            echo "Picked Up";
+                            break;
+                        case 5:
+                            echo "Picked Up";
                             break;
                         }
                     echo "</button>";
@@ -195,6 +197,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <?php displayOrders(5);?>
                         <?php displayOrders(4);?>
                         <!-- Add more rows as needed -->
                     </tbody>
@@ -214,7 +217,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php displayOrders(5);?>
+                        <?php displayOrders(6);?>
                         <!-- Add more rows as needed -->
                     </tbody>
                 </table>
@@ -240,6 +243,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <?php displayOrders(-1);?>
                         <?php displayOrders(0);?>
                         <!-- Add more rows as needed -->
                     </tbody>

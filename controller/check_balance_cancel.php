@@ -4,16 +4,14 @@
     require('db_model.php');
 
     require_once('../vendor/autoload.php');
-
-    $stmt = $conn->prepare("SELECT * FROM transactions WHERE uID = ? AND tStatus = 1 LIMIT 1");
-    $stmt->execute([$_SESSION['userID']]);
+    
+    $stmt = $conn->prepare("SELECT * FROM transactions WHERE tID = ?");
+    $stmt->execute([$_GET['transactionID']]);
     $transaction = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    // echo $transaction['tPayID'];
 
     $client = new \GuzzleHttp\Client();
 
-    $pay_url = 'https://api.paymongo.com/v1/checkout_sessions/'. $transaction['tPayID'];
+    $pay_url = 'https://api.paymongo.com/v1/checkout_sessions/'. $transaction['tPayIDRemain'];
 
     $response = $client->request('GET', $pay_url, [  
     'headers' => [
@@ -26,14 +24,9 @@
 
     $payment_json = json_decode($res, true);
 
-    $payStatus = 1;
-    if($transaction['tPayRemain'] == 0){
-        $payStatus = 2;
-    }
-
     if(isset($payment_json['data']['attributes']['paid_at'])){
-        $stmt = $conn->prepare("UPDATE transactions SET tStatus = 2, tPayStatus = ?, tDateOrder = NOW() WHERE tID = ?");
-        $stmt->execute([$payStatus, $transaction['tID']]);
+        $stmt = $conn->prepare("UPDATE transactions SET tStatus = 0, tPayRemain = 0, tPayStatus = 2 WHERE tID = ?");
+        $stmt->execute([$_GET['transactionID']]);
     }
 
     header('Location: ../public/pages/orders.php');

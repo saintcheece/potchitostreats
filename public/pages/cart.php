@@ -32,15 +32,15 @@
     }
 
     // CHECKOUT
-    if (isset($_POST['checkout'])) {
+    // if (isset($_POST['checkout'])) {
 
-        if($transaction){
-            $stmt = $conn->prepare("UPDATE transactions SET tStatus = 2, tDateOrder = NOW() WHERE tID = ?");
-            $stmt->execute([$transaction]);
-            header('cart.php');
-            $transaction = null;
-        }
-    }
+    //     if($transaction){
+    //         $stmt = $conn->prepare("UPDATE transactions SET tStatus = 2, tDateOrder = NOW() WHERE tID = ?");
+    //         $stmt->execute([$transaction]);
+    //         header('cart.php');
+    //         $transaction = null;
+    //     }
+    // }
 
     if(isset($_POST['emptyCart'])){
         $stmt = $conn->prepare("DELETE FROM orders WHERE tID = ?");
@@ -57,10 +57,15 @@
 
         if($orders > 0){
             // ...GET PRODUCT DETAILS FOR EACH ORDER
-            $stmt = $conn->prepare("SELECT p.pID, p.pType, p.pName, p.pPrice,  o.oQty, ((p.pPrice + COALESCE(cf.cfPrice, 0) + COALESCE(cs.csPrice, 0))) AS total, p.pPrepTime
+            $stmt = $conn->prepare("SELECT o.oID, p.pID, p.pType, p.pName, p.pPrice,  o.oQty,
+                                    CASE
+                                        WHEN p.pType = 3 THEN (p.pPrice + COALESCE(cf.cfPrice, 0) + COALESCE(cs.csPrice, 0))
+                                        ELSE p.pPrice
+                                    END AS total,
+                                    p.pPrepTime
                                     FROM orders o
                                     INNER JOIN products p ON o.pID = p.pID
-                                    LEFT JOIN cakes c ON o.pID = c.pID
+                                    LEFT JOIN cakes c ON o.tID = c.tID
                                     LEFT JOIN cakes_flavor cf ON c.cfID = cf.cfID
                                     LEFT JOIN cakes_size cs ON c.csID = cs.csID
                                     WHERE o.tID = ?");
@@ -106,7 +111,7 @@
 
     <section id="cart-section" class="p-2">
         <div class="cart-content">
-            <div class="cart-items">
+            <div class="cart-items" style="max-height: 70vh; overflow-y: auto;">
                 <table>
                     <thead>
                         <tr>
@@ -195,13 +200,15 @@
                         <div class="d-flex justify-content-between mb-4 small">
                             <span>TOTAL</span> <strong id="order-total" class="text-dark">₱</strong>
                         </div>
-                        <div class="mb-1 small">
+                        
                             <?php if(in_array(3, array_column($products, 'pType'))){ ?>
-                            <label class="form-check-label text-muted" for="tnc">
+                            <div class="mb-1 small alert alert-warning">
+                            <label class="form-check-label" for="tnc">
                                 You have a custom cake in your cart. You will be contacted by our team for consultation after order is placed.
                             </label>
+                            </div>
                             <?php } ?>
-                        </div>
+                        
                         <label for="date" class="form-label">Choose pickup date</label>
                         <?php
                             // current day + (prep time(int as hours) + grace time(int as hours) rounded up to nearest day since input is date, not time)

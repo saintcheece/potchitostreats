@@ -67,7 +67,7 @@
             }
         } else {
             // if no transaction exists, create one
-            $stmt = $conn->prepare("INSERT INTO transactions (uID, tType, tStatus) VALUES (?, 2, 1)");
+            $stmt = $conn->prepare("INSERT INTO transactions (uID, tStatus) VALUES (?, 1)");
             $stmt->execute([$_SESSION['userID']]);
             $transactionID = $conn->lastInsertId();
             // then add the product

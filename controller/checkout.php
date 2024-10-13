@@ -9,10 +9,15 @@
     $stmt->execute([$_SESSION['userID']]);
     $transaction = $stmt->fetchColumn();
 
-    $stmt = $conn->prepare("SELECT p.pID, p.pType, p.pName, p.pPrice,  o.oQty, ((p.pPrice + COALESCE(cf.cfPrice, 0) + COALESCE(cs.csPrice, 0))) AS total, p.pPrepTime
+    $stmt = $conn->prepare("SELECT o.oID, p.pID, p.pType, p.pName, p.pPrice,  o.oQty,
+                            CASE
+                                WHEN p.pType = 3 THEN (p.pPrice + COALESCE(cf.cfPrice, 0) + COALESCE(cs.csPrice, 0))
+                                ELSE p.pPrice
+                            END AS total,
+                            p.pPrepTime
                             FROM orders o
                             INNER JOIN products p ON o.pID = p.pID
-                            LEFT JOIN cakes c ON o.pID = c.pID
+                            LEFT JOIN cakes c ON o.tID = c.tID
                             LEFT JOIN cakes_flavor cf ON c.cfID = cf.cfID
                             LEFT JOIN cakes_size cs ON c.csID = cs.csID
                             WHERE o.tID = ?");
@@ -93,8 +98,8 @@
 
     $payment_json = json_decode($res, true);
 
-    $stmt = $conn->prepare("UPDATE transactions SET tPayID = ?, tDateClaim = ?, tPayStatus = 1, tDateOrder = NOW(), tPayRemain = ? WHERE tID = ?");
-    $stmt->execute([$payment_json['data']['id'], date("Y-m-d", strtotime($_POST['orderDate'])), $totalRemain, $transaction]);
+    $stmt = $conn->prepare("UPDATE transactions SET tPayID = ?, tDateClaim = ?, tDateOrder = NOW(), tPayRemain = ?, tType = ? WHERE tID = ?");
+    $stmt->execute([$payment_json['data']['id'], date("Y-m-d", strtotime($_POST['orderDate'])), $totalRemain, $_POST['paymentOption'], $transaction]);
 
     header("Location: " . $payment_json['data']['attributes']['checkout_url']);
 

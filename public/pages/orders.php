@@ -1,49 +1,51 @@
 <?php
     session_start();
+
     require('../../controller/db_model.php');
 
-    // GET ALL TRANSACTIONS
-    $stmt = $conn->prepare("SELECT tID, tType, tDateOrder, tDateClaim, tPayStatus, tStatus, tPayRemain FROM transactions WHERE uID = ? ORDER BY tID DESC");
+    $stmt = $conn->prepare('
+        SELECT tID, tType, tDateOrder, tDateClaim, tPayStatus, tStatus, tPayRemain
+        FROM transactions
+        WHERE uID = ?
+        ORDER BY tID DESC
+    ');
+
     $stmt->execute([$_SESSION['userID']]);
-    $allTransactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // GET PENDING TRANSACTION IDS
-    $pendingTransactions = getTransactionByStatus($allTransactions, 2);
+    $pendingTransactions = getTransactionsByStatus($transactions, 2);
+    $processingTransactions = getTransactionsByStatus($transactions, 3);
+    $pickupTransactions = array_merge(
+        getTransactionsByStatus($transactions, 4),
+        getTransactionsByStatus($transactions, 5)
+    );
+    $successTransactions = getTransactionsByStatus($transactions, 6);
+    $cancelledTransactions = array_merge(
+        getTransactionsByStatus($transactions, -1),
+        getTransactionsByStatus($transactions, 0)
+    );
 
-    // GET PROCESSING TRANSACTION IDS
-    $processingTransactions = getTransactionByStatus($allTransactions, 3);
-
-    // GET READY FOR PICKUP TRANSACTION IDS
-    $pickupTransactions = getTransactionByStatus($allTransactions, 4);
-
-    // GET SUCCESS TRANSACTION IDS
-    $successTransactions = getTransactionByStatus($allTransactions, 5);
-
-    // GET CANCELLED TRANSACTION IDS
-    $cancelledTransactions = getTransactionByStatus($allTransactions, 0);
-
-    // GET PICKUP TRANSACTION IDS
-    function getTransactionByStatus($transactions, $status){
-        $transactionList = [];
-        foreach($transactions as $transaction){
-            if($transaction['tStatus'] == $status){
-                array_push($transactionList, $transaction);
-            }
-        }
-        return $transactionList;
+    function getTransactionsByStatus($transactions, $status)
+    {
+        return array_filter($transactions, function ($transaction) use ($status) {
+            return $transaction['tStatus'] === $status;
+        });
     }
 
     // PRINTER
     function printTransactions($conn, $transactions){
         foreach($transactions as $transaction){
-            $stmt = $conn->prepare("SELECT p.pType, p.pName, p.pPrice, o.oQty, cf.cfPrice, cf.cfName, cs.csSize, cs.csSize, c.cMessage, c.cInstructions
-                                    FROM transactions t
-                                    INNER JOIN orders o ON t.tID = o.tID
+            $stmt = $conn->prepare("SELECT o.oID, p.pID, p.pType, p.pName, p.pPrice,  o.oQty, cfName, csSize, cInstructions, cMessage,
+                                    CASE
+                                    WHEN p.pType = 3 THEN (p.pPrice + COALESCE(cf.cfPrice, 0) + COALESCE(cs.csPrice, 0))
+                                    ELSE p.pPrice
+                                    END AS total, p.pPrepTime
+                                    FROM orders o
                                     INNER JOIN products p ON o.pID = p.pID
-                                    LEFT JOIN cakes c ON t.tID = c.tID AND p.pID = c.pID
-                                    INNER JOIN cakes_flavor cf ON c.cfID = cf.cfID
-                                    INNER JOIN cakes_size cs ON c.csID = cs.csID
-                                    WHERE t.tID = ?;");
+                                    LEFT JOIN cakes c ON o.tID = c.tID
+                                    LEFT JOIN cakes_flavor cf ON c.cfID = cf.cfID
+                                    LEFT JOIN cakes_size cs ON c.csID = cs.csID
+                                    WHERE o.tID = ?;");
             $stmt->execute([$transaction['tID']]);
             $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     ?>
@@ -51,19 +53,39 @@
             <div class="gold-members p-4">
                 <div class="media">
                     <div class="media-body">
-                        <?php if($transaction['tStatus'] != 0 && $transaction['tStatus'] > 5){ ?>
-                            <span class="float-right text-info"><i class="icofont-check-circled text-success">Pick Up on <b><?= date('F j, Y', strtotime($transaction['tDateClaim']))?></b></i></span>
-                        <?php }else if($transaction['tStatus'] == 5){ ?>
-                            <span class="float-right text-success"><i class="icofont-close-circled text-success">COMPLETED</i></span>
-                        <?php } else{?>
-                            <span class="float-right text-danger"><i class="icofont-close-circled text-danger">CANCELLED</i></span>
-                        <?php }?>
+                        <!-- TOP MESSAGE -->
+                        <?php switch($transaction['tStatus']){
+                            case -1:
+                                echo '<span class="float-right text-fade"><i class="icofont-close-circled text-danger">Please wait for the cancellation refund.</i></span>';
+                                break;
+                            case 0:
+                                echo '<span class="float-right text-danger"><i class="icofont-close-circled text-danger">CANCELLED</i></span>';
+                                break;
+                            case 2:
+                                echo '<span class="float-right"><i class="icofont-close-circled text-fade">WAITING CONFIRMATION...</i></span>';
+                                break;
+                            case 3:
+                                echo '<span class="float-right text-info"><i class="icofont-check-circled text-success">Pick Up on <b>'.date('F j, Y', strtotime($transaction['tDateClaim'])).'</b></i></span>';
+                                break;
+                            case 4:
+                                echo '<span class="float-right text-info"><i class="icofont-check-circled text-success">Ready for Pickup!</i></span>';
+                                break;
+                            case 6:
+                                echo '<span class="float-right text-success"><i class="icofont-close-circled text-success">COMPLETED</i></span>';
+                                break;
+                        }?>
+
+                        <!-- ORDER NUMBER -->
                         <h6 class="mb-2">Order #<?= $transaction['tID']?></h6>
+
                         <?php 
                             $pendingPayment = 0;
                             $totalPayment = 0;
                             foreach($orders as $order){ ?>
+                                <!-- ORDER NUMBER -->
                                 <p class="text-dark no-margin"><?= $order['pName'] ?> - <?= $order['oQty'] ?></p>
+
+                                <!-- IF CAKE, LIST MODIFICATIONS -->
                                 <?php 
                                     if($order['pType'] == 3){
                                     ?>
@@ -71,50 +93,56 @@
                                             <ul style="list-style-type: none;">
                                                 <li>Flavor: <?= $order['cfName'] ?></li>
                                                 <li>Size: <?= $order['csSize'] ?></li>
-                                                <li>Flavor: <?= $order['cMessage'] ?></li>
-                                                <li>Flavor: <?= $order['cInstructions'] ?></li>
+                                                <li>Message: <?= $order['cMessage'] ?></li>
+                                                <li>Instructions: <?= $order['cInstructions'] ?></li>
                                             </ul>
                                     </small>
                                     <?php
-                                    $pendingPayment += (($transaction['tType'] == 1 ) ? $order['pPrice']* $order['oQty'] : $order['pPrice'] * $order['oQty']/2);
+                                    $pendingPayment += (($transaction['tType'] == 1 ) ? $order['total']* $order['oQty'] : $order['total'] * $order['oQty']/2);
                                     }
-                                    $totalPayment += $order['pPrice']* $order['oQty'];
+                                    $totalPayment += $order['total']* $order['oQty'];
                                 } ?>
-                        <hr> 
+                        <hr>
                         <div class="float-right">
                             <?php 
                                 $diff = strtotime($transaction['tDateClaim']) - time();
                                 $hours = floor($diff / (60 * 60));
-                                if($hours < 48){ ?>
-                                    <button class="btn btn-sm btn-outline-secondary" style="cursor: not-allowed;" disabled>
-                                        <i class="icofont-headphone-alt"></i> Cancel Order
-                                    </button>
-                                <?php } else if ($transaction['tStatus'] != 0 && $transaction['tStatus'] < 3){ ?>
-                                    <button class="cancel-order btn btn-sm btn-outline-danger" href="#" data-bs-toggle="modal" data-order-id="<?= $transaction['tID'] ?>" data-bs-target="#cancelOrderModal">
-                                        <i class="icofont-headphone-alt"></i> Cancel Order
-                                    </button>
+                                // IF ORDER IS < 48 HOURS
+                                // IF ORDER IS ACCEPTED
+                                if($transaction['tStatus'] == 4 || $transaction['tStatus'] == 5) { ?>
+                                    <a class="btn btn-sm btn-outline-secondary" href="https://www.google.com/maps/place/Potchito's+Buns+x+Cookies/@15.0776334,120.9362988,17.95z/data=!4m6!3m5!1s0x339703be6c93bf6b:0xceff0ab57a3a425c!8m2!3d15.0779421!4d120.9374447!16s%2Fg%2F11s0drmx4v?entry=ttu&g_ep=EgoyMDI0MTAwOS4wIKXMDSoASAFQAw%3D%3D" target="_blank"><i class="icofont-headphone-alt"></i> Get Directions</a><?php 
+                                }
+                                if($hours < 48 && $transaction['tStatus'] < 5) {
+                                    if($transaction['tPayStatus'] == 1){ ?>
+                                        <button class="cancel-order-late btn btn-sm btn-outline-danger" data-order-id="<?= $transaction['tID'] ?>">Cancel Order</button><?php
+                                    }
+                                // IF NOT LATE
+                                } else if ($transaction['tStatus'] > 1 && $transaction['tStatus'] <= 3 && (strtotime($transaction['tDateClaim']) - time() > 48*60*60) ){ ?>
+                                    <button class="cancel-order-valid btn btn-sm btn-outline-danger" href="#" data-bs-toggle="modal" data-order-id="<?= $transaction['tID'] ?>" data-bs-target="#cancelOrderModal"><i class="icofont-headphone-alt"></i> Cancel Order</button>
                                     <button class="btn btn-sm btn-outline-primary" href="#" data-bs-toggle="modal" data-order-id="<?= $transaction['tID'] ?>" data-bs-target="">
                                         <i class="icofont-headphone-alt"></i> Edit Orders
-                                    </button>
-                                <?php }
-                            ?>
-                            <?php if($transaction['tType'] == 2 && $transaction['tStatus'] == 4){?>
-                                <a class="btn btn-sm btn-outline-primary" href="#"><i class="icofont-headphone-alt"></i> Pay with GCASH</a>
-                            <?php }?>
+                                    </button><?php 
+                                }
+                                // DONE DEPOSITS
+                                if($transaction['tType'] == 2 && $transaction['tStatus'] == 4 || $transaction['tStatus'] == 5){ 
+                                    // READY FOR PICK UP1    DEPOSIT NOT PAID
+                                    if($transaction['tStatus'] == 4){ ?>
+                                        <a class="pay-remaining btn btn-sm btn-outline-primary" data-order-id="<?= $transaction['tID']?>"><i class="icofont-headphone-alt"></i> Pay with GCASH</a><?php 
+                                    } ?><?php 
+                                }?>
                         </div>
-                        <?php if($transaction['tPayStatus'] == 1 && $transaction['tStatus'] < 5 && $transaction['tStatus'] > 0){ ?>
+                        <?php if($transaction['tPayStatus'] == 1 && $transaction['tStatus'] < 6 && $transaction['tStatus'] > 0 && $transaction['tType'] == 2){ ?>
                             <p class="mb-0 text-black text-primary pt-2"><span class="text-black font-weight-bold"> Pending Balance:</span> <?= $transaction['tPayRemain'] ?></p>
                             <small>Only payable once pick up is ready</small>
                         <?php }else{ ?>
-                            <p class="mb-0 text-primary pt-2"><span class="font-weight-bold text-primary"><h2>₱<?= $totalPayment?></h2></span></p>
-                        <?php } ?>
+                            <p class="mb-0 text-primary pt-2"><span class="font-weight-bold text-primary"><h2>₱<?= $totalPayment ?></h2></span></p>
+                            <?php } ?>
                     </div>
                 </div>
             </div>
         </div>
     <?php } 
-    }?>
-<!DOCTYPE html>
+    }?><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -193,7 +221,9 @@
                             <h4 class="font-weight-bold mt-0 mb-4">All Orders</h4>
 
                             <?php 
-                                printTransactions($conn, $allTransactions);
+                                printTransactions($conn, $pickupTransactions);
+                                printTransactions($conn, $processingTransactions);
+                                printTransactions($conn, $pendingTransactions);
                             ?>
 
                         </div>
@@ -241,7 +271,7 @@
                 <div class="mb-3">
                     <input type="hidden" id="transactionID" name="transactionID">
                     <label for="cancellationReason" class="form-label">Reason for cancellation:</label>
-                    <select class="form-select" id="cancellationReason" name="cancellationReason">
+                    <select class="form-select" id="cancellationReason" name="cancellationReason" required>
                         <option value="" disabled selected>Choose a reason</option>
                         <option value="duplicate">Duplicate Order</option>
                         <option value="fraudulent">Fraudulent Order</option>
@@ -260,11 +290,52 @@
     </div>
 </div>
 
+<div class="modal fade" id="cancelOrderLateModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"> <!-- Add modal-dialog-centered class -->
+        <form class="modal-content" action="../../controller/client_cancel_checkout.php" method="get">
+            <div class="modal-header">
+                <h5 class="modal-title">Late Cancellation!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="hidden" id="cancelTransactionID" name="transactionID">
+                </div>
+                <div class="alert alert-danger" role="alert">
+                    <b>Your order is over our 48-hour cancellation deadline!</b><br><br>
+                    By proceeding, you will...<br/>
+                    <ul>
+                        <li>be redirected to the payment page to pay for the remaining balance to pay for the order.</li>
+                        <li>not be able to pick up the product as production will be cancelled.</li>
+                    </ul>
+                    See our <a href="terms-and-conditions.php">Terms and Services</a> for more information.
+                    <br/><br/>Thank you for understanding.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-danger" id="confirmCancelLate">Pay the Remaining Balance</button>
+            </div>
+        </form>
+    </div>
+</div>
+
     <script>
-        $('.cancel-order').on('click', function() {
+        $('.cancel-order-valid').on('click', function() {
             var orderId = $(this).data('order-id');
             $('#transactionID').val(orderId);
-            $('#cancelOrderModal').modal('show');
+            $('#cancelOrderModal').modal('show');   
+        });
+
+        $('.cancel-order-late').on('click', function() {
+            var orderId = $(this).data('order-id');
+            $('#cancelTransactionID').val(orderId);
+            $('#cancelOrderLateModal').modal('show');
+        });
+
+        $('.pay-remaining').on('click', function() {
+            var orderId = $(this).data('order-id');
+            window.location.href = '../../controller/pay_remaining.php?transactionID=' + orderId;
         });
     </script>
 </body>
