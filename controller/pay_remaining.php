@@ -4,13 +4,17 @@
 
     require('db_model.php');
 
-    $stmt = $conn->prepare("SELECT o.oID, p.pID, p.pType, p.pName, p.pPrice,  o.oQty, ((p.pPrice + COALESCE(cf.cfPrice, 0) + COALESCE(cs.csPrice, 0))) AS total, p.pPrepTime
-                                    FROM orders o
-                                    INNER JOIN products p ON o.pID = p.pID
-                                    LEFT JOIN cakes c ON o.tID = c.tID
-                                    INNER JOIN cakes_flavor cf ON c.cfID = cf.cfID
-                                    INNER JOIN cakes_size cs ON c.csID = cs.csID
-                                    WHERE o.tID = ?");
+    $stmt = $conn->prepare("SELECT o.oID, p.pID, p.pType, p.pName, p.pPrice,  o.oQty,
+                                                    CASE WHEN p.pType = 3 
+                                                        THEN (p.pPrice + (COALESCE(cf.cfPrice, 0) * COALESCE(c.cLayers, 0) * COALESCE(cs.csSize, 0)))
+                                                        ELSE p.pPrice
+                                                        END AS total, p.pPrepTime
+                                                    FROM orders o
+                                                    INNER JOIN products p ON o.pID = p.pID
+                                                    LEFT JOIN cakes c ON o.oID = c.oID
+                                                    LEFT JOIN cakes_flavor cf ON c.cfID = cf.cfID
+                                                    LEFT JOIN cakes_size cs ON c.csID = cs.csID
+                                                    WHERE o.tID = ?;");
     $stmt->execute([$_GET['transactionID']]);
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

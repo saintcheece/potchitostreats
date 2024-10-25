@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Cake Details Modal</title>
+    <style>
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+      }
+
+      .modal-content {
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        margin: 5% auto;
+        padding: 30px;
+        border: none;
+        width: 80%;
+        max-width: 500px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        text-align: left;
+        position: relative;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+          sans-serif;
+      }
+
+      .close {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        color: #aaa;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .close:hover {
+        color: #333;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      label {
+        font-weight: 600;
+      }
+
+      input[type="text"],
+      select,
+      textarea {
+        width: 100%;
+        padding: 12px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        font-size: 16px;
+        background-color: #fff;
+      }
+
+      input[type="text"]:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #4caf50;
+        outline: none;
+      }
+
+      textarea {
+        resize: vertical;
+        height: 80px;
+      }
+
+      /* Modal buttons */
+      .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .cancel-btn,
+      .save-btn {
+        padding: 12px 20px;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+
+      .cancel-btn {
+        background-color: #9e9e9e;
+        color: white;
+      }
+
+      .cancel-btn:hover {
+        background-color: #757575;
+      }
+
+      .save-btn {
+        background-color: #4caf50;
+        color: white;
+      }
+
+      .save-btn:hover {
+        background-color: #388e3c;
+      }
+
+      /* Responsive layout */
+      @media (max-width: 600px) {
+        .modal-content {
+          width: 95%;
+          margin: 20% auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Button to open the modal -->
+    <button id="openModalBtn">Edit Cake Details</button>
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Edit Cake Variant Details</h2>
+        <form>
+          <label for="flavor">Flavor:</label>
+          <select id="flavor" name="flavor" required>
+            <option value="" disabled selected>Select cake flavor</option>
+            <option value="vanilla">Vanilla</option>
+            <option value="chocolate">Chocolate</option>
+          </select>
+
+          <label for="message">Message:</label>
+          <input
+            type="text"
+            id="message"
+            name="message"
+            placeholder="Enter message on cake"
+            required
+          />
+
+          <label for="instructions">Instructions:</label>
+          <textarea
+            id="instructions"
+            name="instructions"
+            placeholder="Enter special instructions"
+            required
+          ></textarea>
+
+          <div class="modal-buttons">
+            <button type="button" class="cancel-btn">Cancel</button>
+            <button type="submit" class="save-btn">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const modal = document.getElementById("myModal");
+
+      const openModalBtn = document.getElementById("openModalBtn");
+
+      const closeBtn = document.querySelector(".close");
+
+      const cancelBtn = document.querySelector(".cancel-btn");
+
+      // Listen for open click
+      openModalBtn.addEventListener("click", () => {
+        modal.style.display = "block";
+      });
+
+      // Listen for close click
+      closeBtn.addEventListener("click", () => {
+        modal.style.display = "none";
+      });
+
+      // Listen for cancel click
+      cancelBtn.addEventListener("click", () => {
+        modal.style.display = "none";
+      });
+
+      // Listen for outside click
+      window.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          modal.style.display = "none";
+        }
+      });
+    </script>
+  </body>
+</html>

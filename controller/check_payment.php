@@ -5,11 +5,11 @@
 
     require_once('../vendor/autoload.php');
 
-    $stmt = $conn->prepare("SELECT * FROM transactions WHERE uID = ? AND tStatus = 1 LIMIT 1");
+    $stmt = $conn->prepare("SELECT * FROM transactions WHERE uID = ? AND tStatus = 1");
     $stmt->execute([$_SESSION['userID']]);
     $transaction = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // echo $transaction['tPayID'];
+    echo $transaction['tPayID'];
 
     $client = new \GuzzleHttp\Client();
 
@@ -35,6 +35,9 @@
         $stmt = $conn->prepare("UPDATE transactions SET tStatus = 2, tPayStatus = ?, tDateOrder = NOW() WHERE tID = ?");
         $stmt->execute([$payStatus, $transaction['tID']]);
     }
+
+    audit(109);
+    notify(1);
 
     header('Location: ../public/pages/orders.php');
 ?>

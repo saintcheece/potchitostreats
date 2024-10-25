@@ -57,17 +57,17 @@
 
         if($orders > 0){
             // ...GET PRODUCT DETAILS FOR EACH ORDER
-            $stmt = $conn->prepare("SELECT o.oID, p.pID, p.pType, p.pName, p.pPrice,  o.oQty,
-                                    CASE
-                                        WHEN p.pType = 3 THEN (p.pPrice + COALESCE(cf.cfPrice, 0) + COALESCE(cs.csPrice, 0))
-                                        ELSE p.pPrice
-                                    END AS total,
-                                    p.pPrepTime
+            $stmt = $conn->prepare("SELECT o.oID, p.pID, p.pType, p.pName, p.pPrice, cc.ccName, c.cLayers, o.oQty,
+                                    CASE WHEN p.pType = 3 
+                                    	THEN (p.pPrice + (COALESCE(cf.cfPrice, 0) * COALESCE(c.cLayers, 0) * COALESCE(cs.csSize, 0)))
+                                    	ELSE p.pPrice
+                                    	END AS total, p.pPrepTime
                                     FROM orders o
                                     INNER JOIN products p ON o.pID = p.pID
-                                    LEFT JOIN cakes c ON o.tID = c.tID
+                                    LEFT JOIN cakes c ON o.oID = c.oID
                                     LEFT JOIN cakes_flavor cf ON c.cfID = cf.cfID
                                     LEFT JOIN cakes_size cs ON c.csID = cs.csID
+                                    LEFT JOIN cakes_color cc ON c.ccID = cc.ccID
                                     WHERE o.tID = ?");
             $stmt->execute([$transaction]);
             $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -139,10 +139,11 @@
                             <td style="text-align:left;"><b><?=$product['pName']?></b>
                                 <?php if($product['pType'] == 3){?>
                                     <?php 
-                                        $stmt = $conn->prepare("SELECT * 
+                                        $stmt = $conn->prepare("SELECT *
                                                                 FROM cakes c
                                                                 INNER JOIN cakes_flavor cf ON c.cfID = cf.cfID
                                                                 INNER JOIN cakes_size cs ON c.csID = cs.csID
+                                                                INNER JOIN cakes_color cc ON c.ccID = cc.ccID
                                                                 WHERE c.tID = ? AND c.pID = ?");
                                         $stmt->execute([$transaction, $product['pID']]);
                                         $cake = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -150,8 +151,11 @@
                                     <div>
                                         <small>Flavor: <?= $cake['cfName']?></small><br>
                                         <small>Size: <?= $cake['csSize']?></small><br>
+                                        <small>Color: <?= $cake['ccName']?></small><br>
+                                        <small>Layers: <?= $cake['cLayers']?></small><br>
                                         <small>Message: <?= $cake['cMessage']?></small><br>
                                         <small>Instruction: <?= $cake['cInstructions']?></small><br>
+                                        <a href="../../reference-gallery/cRef_<?=$cake['cID']?>.jpg" target="_blank" rel="noopener noreferrer"><small>view reference</small></a><br>
                                     </div>
                                 <?php }?>
                             </td>

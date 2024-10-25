@@ -2,6 +2,28 @@
     session_start();
     require('../../controller/db_model.php');
 
+    if (isset($_POST['newFName'])) {
+        $newUFName = filter_input(INPUT_POST, 'newUFName', FILTER_SANITIZE_STRING);
+
+        $stmt = $conn->prepare("UPDATE users SET uFName = :newUFName, uLName = :newULName, uEmail = :newUEmail, uPhone = :newUPhone WHERE uID = :uID");
+        $stmt->execute([
+            'newUFName' => $_POST['newFName'],
+            'newULName' => $_POST['newLName'],
+            'newUEmail' => $_POST['newEmail'],
+            'newUPhone' => $_POST['newPhone'],
+            'uID' => $_SESSION['userID']
+        ]);
+    }
+
+    if(isset($_POST['newPassword'])){
+
+        $stmt = $conn->prepare("UPDATE users SET uPass = :newUPass WHERE uID = :uID");
+        $stmt->execute([
+            'newUPass' => $_POST['newPassword'],
+            'uID' => $_SESSION['userID']
+        ]);
+    }
+
     $stmt = $conn->prepare("SELECT * FROM users WHERE uID = :uID LIMIT 1");
     $stmt->execute(['uID' => $_SESSION['userID']]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -16,6 +38,7 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
     <style>
         body {
@@ -72,6 +95,40 @@
         .editable .form-control {
             pointer-events: auto;
         }
+
+        /* Make it responsive */
+        @media (max-width: 768px) {
+            .form-box {
+                width: 90%;
+            }
+            .image-box {
+                display: none; /* Hide image box on smaller screens */
+            }
+            .page-container {
+                flex-direction: column;
+            }
+        }
+        /* Style for error message */
+        .error-message {
+            color: red;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        /* The message box is shown when the user clicks on the password field */
+        #message {
+        display:none;
+        }
+
+        /* Add a green text color and a checkmark when the requirements are right */
+        .valid {
+        color: green;
+        }
+
+        /* Add a red text color and an "x" when the requirements are wrong */
+        .invalid {
+        color: red;
+        }
     </style>
 </head>
 <body>
@@ -89,39 +146,44 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="change-password-tab" data-bs-toggle="tab" data-bs-target="#change-password" type="button" role="tab" aria-controls="change-password" aria-selected="false">Change Password</button>
                     </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button" role="tab" aria-controls="address" aria-selected="false">Address</button>
-                    </li>
                 </ul>
 
                 <div class="tab-content" id="myTabContent">
                     <!-- General Information Section -->
                     <div class="tab-pane fade show active" id="general-info" role="tabpanel" aria-labelledby="general-info-tab">
                         <div class="bg-secondary-soft px-4 py-5 rounded">
-                            <div class="row g-3">
+                            <form action="user-profile.php" method="post" class="row g-3">
                                 <h4 class="mb-4 mt-0">Contact Detail</h4>
                                 <div class="col-md-6">
                                     <label class="form-label">First Name *</label>
-                                    <input type="text" class="form-control" value="<?= $user['uFName']?>" readonly>
+                                    <input name="newFName" type="text" class="form-control" value="<?= $user['uFName']?>" readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Last Name *</label>
-                                    <input type="text" class="form-control" value="<?= $user['uLName']?>" readonly>
+                                    <input name="newLName" type="text" class="form-control" value="<?= $user['uLName']?>" readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Mobile number *</label>
-                                    <input type="text" class="form-control" value="+09618024503" readonly>
+                                    <input name="newPhone" type="text" class="form-control" value="<?= $user['uPhone']?>" readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="inputEmail4" class="form-label">Email *</label>
-                                    <input type="email" class="form-control" id="inputEmail4" value="<?= $user['uEmail']?>" readonly>
+                                    <input name="newEmail" type="email" class="form-control" id="inputEmail4" value="<?= $user['uEmail']?>" readonly>
+                                </div><div class="action-buttons mt-3">
+                                    <button class="btn btn-secondary cancel-btn">Cancel</button>
+                                    <input type="submit" class="btn btn-primary save-btn" value="Save Changes">
                                 </div>
-                            </div>
-                            <div class="action-buttons mt-3">
-                                <button class="btn btn-secondary cancel-btn">Cancel</button>
-                                <button class="btn btn-primary save-btn">Save</button>
-                            </div>
-                            <button class="btn btn-primary edit-btn mt-3">Edit</button>
+                            </form>
+                            <?php
+                                $stmt = $conn->prepare("SELECT * FROM transactions WHERE uID = ? AND tPayStatus > 0 AND tPayStatus < 6");
+                                $stmt->execute([$_SESSION['userID']]);
+                                $existsOngoing = (bool) $stmt->fetch(PDO::FETCH_ASSOC);
+                            ?>
+                            <?php if ($existsOngoing){ ?>
+                                <small class="text-danger">You have ongoing orders, please cancel them or wait for them to be completed before changing your account details.</>
+                            <?php }else{ ?>
+                                <button class="btn btn-primary edit-btn mt-3">Edit</button>
+                            <?php } ?>
                         </div>
                     </div>
 
@@ -130,13 +192,25 @@
                         <div class="bg-secondary-soft px-4 py-5 rounded">
                             <div class="row g-3">
                                 <h4 class="my-4">Change Password</h4>
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <label for="oldPassword" class="form-label">Old password *</label>
                                     <input type="password" class="form-control" id="oldPassword" readonly>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <label for="newPassword" class="form-label">New password *</label>
-                                    <input type="password" class="form-control" id="newPassword" readonly>
+                                    <input type="password" class="form-control" id="newPassword" readonly required pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d\W_&#46;]{8,}$" onkeyup="checkPassword()">
+                                    <div class="d-flex justify-content-end">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="showPass" onclick="showPassword()">
+                                        <small class="form-check-label" for="showPass">View Password</small>
+                                    </div>
+                                    </div>
+                                    <small id="message" class="text-muted opacity-50">
+                                        <p id="letter" class="invalid m-0" style="text-align:left;">a lowercase letter</p>
+                                        <p id="capital" class="invalid m-0" style="text-align:left;">a capital (uppercase) letter</p>
+                                        <p id="number" class="invalid m-0" style="text-align:left;">a number</p>
+                                        <p id="length" class="invalid m-0" style="text-align:left;">8 characters</p>
+                                    </small>
                                 </div>
                                 <div class="col-md-12">
                                     <label for="confirmPassword" class="form-label">Confirm Password *</label>
@@ -147,73 +221,9 @@
                                 <button class="btn btn-secondary cancel-btn">Cancel</button>
                                 <button class="btn btn-primary save-btn">Save</button>
                             </div>
-                            <button class="btn btn-primary edit-btn mt-3">Edit</button>
+                            <button class="btn btn-primary edit-password-btn mt-3">Edit</button>
                         </div>
                     </div>
-
-                    <!-- Address Section -->
-                    <div class="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab">
-                        <div class="bg-secondary-soft px-4 py-5 rounded">
-                            <div class="row g-3">
-                                <h4 class="mb-4 mt-0">Primary Address</h4>
-                                <div class="col-md-6">
-                                    <label class="form-label">Home Address *</label>
-                                    <input type="text" class="form-control" value="<?= $user['uAddrHouseNum']?>" placeholder="Enter your House Number" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Street *</label>
-                                    <input type="text" class="form-control" value="<?= $user['uAddrStreet']?>" placeholder="Enter your Street" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Town/ Baranggay *</label>
-                                    <input type="text" class="form-control" value="<?= $user['uAddrTown']?>" placeholder="Enter your Town/ Baranggay" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">City *</label>
-                                    <input type="text" class="form-control" value="<?= $user['uAddrCity']?>" placeholder="Enter your City" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Province *</label>
-                                    <input type="text" class="form-control" value="<?= $user['uAddrProvince']?>" placeholder="Enter your Barangay" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Region *</label>
-                                    <input type="text" class="form-control" value="<?= $user['uAddrRegion']?>" placeholder="Enter your street address" readonly>
-                                </div>
-                            </div>
-                            <div class="action-buttons mt-3">
-                                <button class="btn btn-secondary cancel-btn">Cancel</button>
-                                <button class="btn btn-primary save-btn">Save</button>
-                            </div>
-                            <button class="btn btn-primary edit-btn mt-3">Edit</button>
-                        </div>
-
-                        <!-- <div class="bg-secondary-soft px-4 py-5 rounded mt-3">
-                            <div class="row g-3">
-                                <h4 class="mb-4 mt-0">Secondary Address</h4>
-                                <div class="col-md-6">
-                                    <label class="form-label">Country / Region *</label>
-                                    <input type="text" class="form-control" value="Philippines" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Town *</label>
-                                    <input type="text" class="form-control" placeholder="Enter your town" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Barangay *</label>
-                                    <input type="text" class="form-control" placeholder="Enter your Barangay" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Street Address *</label>
-                                    <input type="text" class="form-control" placeholder="Enter your street address" readonly>
-                                </div>
-                            </div>
-                            <div class="action-buttons mt-3">
-                                <button class="btn btn-secondary cancel-btn">Cancel</button>
-                                <button class="btn btn-primary save-btn">Save</button>
-                            </div>
-                            <button class="btn btn-primary edit-btn mt-3">Edit</button>
-                        </div> -->
                     </div>
                 </div>
 
@@ -225,6 +235,36 @@
 	<?php include 'layout/footer.php'; ?>
 
     <script>
+        $(document).ready(function() {
+            $('#oldPassword').on('blur', function() {
+                var oldPassword = $(this).val();
+                $.ajax({
+                    type: 'POST',
+                    url: '../../controller/check-password.php',
+                    data: {oldPassword: oldPassword},
+                    success: function(response) {
+                        if (response === 'match') {
+                            $('#newPassword, #confirmPassword').removeAttr('readonly');
+                        } else {
+                            alert('Old password is incorrect.');
+                            $('#newPassword, #confirmPassword').attr('readonly', true);
+                        }
+                    }
+                });
+            });
+        });
+
+        document.querySelectorAll('.edit-password-btn').forEach(function(editBtn) {
+            editBtn.addEventListener('click', function() {
+                var parent = this.closest('.bg-secondary-soft');
+                parent.classList.add('editable');
+                parent.querySelector('#oldPassword').removeAttribute('readonly');
+                parent.querySelector('.action-buttons').style.display = 'block';
+                this.style.display = 'none';
+                parent.querySelector('#oldPassword').focus();
+            });
+        });
+
         document.querySelectorAll('.edit-btn').forEach(function(editBtn) {
             editBtn.addEventListener('click', function() {
                 var parent = this.closest('.bg-secondary-soft');
@@ -264,6 +304,116 @@
                 parent.querySelector('.edit-btn').style.display = 'block';
             });
         });
+
+        function checkPassword() {
+        const password = document.getElementById('signPass').value;
+        const confirmPassword = document.getElementById('signPassConfirm').value;
+        const passwordError = document.getElementById('passwordError');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (password !== confirmPassword) {
+            passwordError.textContent = 'Passwords do not match';
+            submitBtn.disabled = true;
+        } else {
+            passwordError.textContent = '';
+            submitBtn.disabled = false;
+        }
+    }
+
+    function showPassword() {
+        if (document.getElementById('showPass').checked) {
+            document.getElementById('signPass').type = 'text';
+            document.getElementById('signPassConfirm').type = 'text';
+        } else {
+            document.getElementById('signPass').type = 'password';
+            document.getElementById('signPassConfirm').type = 'password';
+        }
+    }
+
+    // PASSWORD STUFF
+
+    function checkPassword() {
+        const password = document.getElementById('signPass').value;
+        const confirmPassword = document.getElementById('signPassConfirm').value;
+        const passwordError = document.getElementById('passwordError');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (password !== confirmPassword) {
+            passwordError.textContent = 'Passwords do not match';
+            submitBtn.disabled = true;
+        } else {
+            passwordError.textContent = '';
+            submitBtn.disabled = false;
+        }
+    }
+
+    function showPassword() {
+        if (document.getElementById('showPass').checked) {
+            document.getElementById('newPassword').type = 'text';
+            document.getElementById('confirmPassword').type = 'text';
+        } else {
+            document.getElementById('newPassword').type = 'password';
+            document.getElementById('confirmPassword').type = 'password';
+        }
+    }
+
+    var myInput = document.getElementById("newPassword");
+    var letter = document.getElementById("letter");
+    var capital = document.getElementById("capital");
+    var number = document.getElementById("number");
+    var length = document.getElementById("length");
+
+        // When the user clicks on the password field, show the message box
+    myInput.onfocus = function() {
+    document.getElementById("message").style.display = "block";
+    }
+
+    // When the user clicks outside of the password field, hide the message box
+    myInput.onblur = function() {
+    document.getElementById("message").style.display = "none";
+    }
+
+    // When the user starts to type something inside the password field
+    myInput.onkeyup = function() {
+        // Validate lowercase letters
+        var lowerCaseLetters = /[a-z]/g;
+        if(myInput.value.match(lowerCaseLetters)) {  
+            letter.classList.remove("invalid");
+            letter.classList.add("valid");
+        } else {
+            letter.classList.remove("valid");
+            letter.classList.add("invalid");
+        }
+        
+        // Validate capital letters
+        var upperCaseLetters = /[A-Z]/g;
+        if(myInput.value.match(upperCaseLetters)) {  
+            capital.classList.remove("invalid");
+            capital.classList.add("valid");
+        } else {
+            capital.classList.remove("valid");
+            capital.classList.add("invalid");
+        }
+
+        // Validate numbers
+        var numbers = /[0-9]/g;
+        if(myInput.value.match(numbers)) {  
+            number.classList.remove("invalid");
+            number.classList.add("valid");
+        } else {
+            number.classList.remove("valid");
+            number.classList.add("invalid");
+        }
+    
+        // Validate length
+        if(myInput.value.length >= 8) {
+            length.classList.remove("invalid");
+            length.classList.add("valid");
+        } else {
+            length.classList.remove("valid");
+            length.classList.add("invalid");
+        }
+    }
     </script>
 </body>
 </html>

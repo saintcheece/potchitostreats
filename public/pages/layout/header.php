@@ -4,6 +4,37 @@
         .navbar {
             border-bottom: 2px solid #ccc; 
         }
+
+        /* CSS used here will be applied after bootstrap.css */
+
+        .notifications {
+            width: 30vw;
+            left: 68vw;
+        }
+        
+        .notification-heading, .notification-footer  {
+            padding:2px 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .item-title {
+            color:#000;
+            margin-bottom: 0;
+        }
+
+        .notifications a.content {
+            text-decoration:none;
+        }
+            
+        .notification-item {
+            padding:10px;
+            margin:5px;
+        }
+
+        .notification-item:hover {
+            background:#ccc;
+        }
     </style>
 </head>
 <body>
@@ -35,6 +66,28 @@
                 <a class="nav-link text-secondary mr-3" href="user-profile.php"><i class="fas fa-user"></i>  Profile</a>
                 <a class="nav-link text-secondary mr-3" href="cart.php"><i class="fas fa-shopping-cart"></i> Cart</a>
                 <a class="nav-link text-secondary mr-3" href="orders.php"><i class="fas fa-box"></i> Orders</a>
+                <!-- <a class="nav-link text-secondary mr-3" id="dLabel" role="button" data-toggle="dropdown" data-target="#" ><i class="fas fa-bell"></i></a> -->
+                <!-- NOTIFCATIONS -->
+                <ul class="dropdown-menu notifications" role="menu" aria-labelledby="dLabel" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="notification-heading mr-4 d-flex align-items-center">
+                        <h4 class="menu-title m-0">Notifications</h4>
+                        <!-- <p class="menu-title pull-right m-0">View all <i class="fa fa-arrow-right"></i></p> -->
+                    </div>
+                    <table class="divider w-100"></li>
+                        <?php for ($i = 0; $i < 30; $i++) { ?>
+                        <tr class="notifications-wrapper">
+                            <td>
+                                <a class="content" href="#">
+                                <div class="notification-item">
+                                    <p class="item-title">Evaluation Deadline 1 · day ago</p>
+                                    <small class="m-0 text-faded">Marketing 101, Video Assignment</small>
+                                </div>
+                            </td>
+                        </tr> 
+                        <?php } ?>
+                    </table></li>
+                </ul>
+                <!--  -->
                 <a class="btn btn-primary" href="../../logout.php">Log Out</a>
             </div>
         <?php }else{ ?>

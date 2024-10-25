@@ -17,12 +17,6 @@
             'signNameLast' => $_POST['signNameLast'],
             'signEmail' => $_POST['signEmail'],
             'signPass' => $_POST['signPass'],
-            'signRegion' => $_POST['signRegion'],
-            'signProv' => $_POST['signProv'],
-            'signCity' => $_POST['signCity'],
-            'signTown' => $_POST['signTown'],
-            'signStreet' => $_POST['signStreet'],
-            'signAddHouseNum' => $_POST['signAddHouseNum'],
             'signPhoneNum' => $_POST['signPhoneNum']
         );
 
@@ -32,18 +26,12 @@
 
             $hash = password_hash($_POST['signPass'], PASSWORD_BCRYPT);
 
-            $stmt = $conn->prepare("INSERT INTO users (uFName, uLName, uEmail, uPass, uAddrRegion, uAddrProvince, uAddrCity, uAddrTown, uAddrStreet, uAddrHouseNum, uPhone) VALUES (:signNameFirst, :signNameLast, :signEmail, :signPass, :signRegion, :signProv, :signCity, :signTown, :signStreet, :signAddHouseNum, :signPhoneNum)");
+            $stmt = $conn->prepare("INSERT INTO users (uFName, uLName, uEmail, uPass, uPhone) VALUES (:signNameFirst, :signNameLast, :signEmail, :signPass, :signPhoneNum)");
             $stmt->execute(array(
                 ':signNameFirst' => $_POST['signNameFirst'],
                 ':signNameLast' => $_POST['signNameLast'],
                 ':signEmail' => $_POST['signEmail'],
                 ':signPass' => $hash,
-                ':signRegion' => (string)$_POST['signRegion'],
-                ':signProv' => (string)$_POST['signProv'],
-                ':signCity' => (string)$_POST['signCity'],
-                ':signTown' => (string)$_POST['signTown'],
-                ':signStreet' => (string)$_POST['signStreet'],
-                ':signAddHouseNum' => (string)$_POST['signAddHouseNum'],
                 ':signPhoneNum' => (string)$_POST['signPhoneNum']
             ));
             
@@ -126,7 +114,7 @@
 
         .verification-card input {
             letter-spacing: 5px;
-            text-align: center;
+            text-align: center; 
             font-size: 1.25rem;
         }
 
@@ -149,12 +137,6 @@
                 <input type="hidden" name="signNameLast" id="signNameLast" value="<?php echo $_POST["signNameLast"] ?>">
                 <input type="hidden" name="signEmail" id="signEmail" value="<?php echo $_POST["signEmail"] ?>">
                 <input type="hidden" name="signPass" id="signPass" value="<?php echo $_POST["signPass"] ?>">
-                <input type="hidden" name="signAddHouseNum" id="signAddHouseNum" value="<?php echo $_POST["signAddHouseNum"] ?>">
-                <input type="hidden" name="signStreet" id="signStreet" value="<?php echo $_POST["signStreet"] ?>">
-                <input type="hidden" name="signTown" id="signTown" value="<?php echo $_POST["signTown"] ?>">
-                <input type="hidden" name="signProv" id="signProv" value="<?php echo $_POST["signProv"] ?>">
-                <input type="hidden" name="signCity" id="signCity" value="<?php echo $_POST["signCity"] ?>">
-                <input type="hidden" name="signRegion" id="signRegion" value="<?php echo $_POST["signRegion"] ?>">
                 <input type="hidden" name="signPhoneNum" id="signPhoneNum" value="<?php echo $_POST["signPhoneNum"] ?>">
             </div>
             <button type="submit" class="btn btn-primary" name="isSubmitted" value="Verify">Verify</button>

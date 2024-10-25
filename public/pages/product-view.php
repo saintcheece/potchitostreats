@@ -19,12 +19,14 @@
         $stmt->execute([$_GET['id'], $transactionID]);
         $count = $stmt->fetchColumn();
         if($count > 0){
-            $stmt = $conn->prepare("SELECT c.*, o.oQty, cf.cfPrice, cs.csPrice, p.pPrice FROM cakes c
+            $stmt = $conn->prepare("SELECT c.*, o.oQty, cf.cfPrice, cs.csSize, c.cLayers, c.ccID, p.pPrice 
+                                    FROM cakes c
                                     INNER JOIN transactions t ON c.tID = t.tID
                                     INNER JOIN orders o ON t.tID = o.tID
                                     INNER JOIN products p ON o.pID = p.pID
                                     INNER JOIN cakes_flavor cf ON p.pID = cf.pID    
                                     INNER JOIN cakes_size cs ON p.pID = cs.pID
+                                    INNER JOIN cakes_color cc ON p.pID = cc.pID
                                     WHERE o.pID = ? AND o.tID = ? LIMIT 1");
             $stmt->execute([$_GET['id'], $transactionID]);
             $cakeDetails = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -40,7 +42,6 @@
             $stmt->execute([$transactionID, $_GET['id']]);
             $orderID = $stmt->fetchColumn();
             if ($orderID != null) {
-                echo "UPDATED";
                 $stmt = $conn->prepare("UPDATE orders SET oQty = ? WHERE oID = ?");
                 $stmt->execute([$_POST['cakeQuantity'], $orderID]);
 
@@ -55,13 +56,29 @@
                         $_GET['id']
                     ]);
                 }
+
+                $stmt = $conn->prepare("SELECT cID FROM cakes WHERE tID = ? AND pID = ? LIMIT 1");
+                $stmt->execute([$transactionID, $_GET['id']]);
+                $cid = $stmt->fetchColumn();
+
+                if (isset($_FILES['cakeReference'])) {
+                    $newname = "cRef"."_$cid.jpg";
+                    if(move_uploaded_file($_FILES['cakeReference']['tmp_name'], "../../reference-gallery/$newname")) {
+                        echo "File uploaded successfully!";
+                      } else {
+                        echo "Error uploading file!";
+                      }
+                } 
+
                 header("Location: cart.php");
             } else {
-                if($_GET['type'] == 3){ addCakeToTransaction($transactionID, $_GET['id'], $conn, $_POST); }
 
                 // add this product to the db
                 $stmt = $conn->prepare("INSERT INTO orders (tID, pID, oQty) VALUES (?, ?, ?)");
                 $stmt->execute([$transactionID, $_GET['id'], $_POST['cakeQuantity']]);
+                $orderID = $conn->lastInsertId();
+
+                if($_GET['type'] == 3){ addCakeToTransaction($transactionID, $_GET['id'], $orderID, $conn, $_POST); }
 
                 header("Location: cart.php");
             }
@@ -73,21 +90,40 @@
             // then add the product
             $stmt = $conn->prepare("INSERT INTO orders (tID, pID, oQty) VALUES (?, ?, ?)");
             $stmt->execute([$transactionID, $_GET['id'], $_POST['cakeQuantity']]);
+            $orderID = $conn->lastInsertId();
 
-            if($_GET['type'] == 3){ addCakeToTransaction($transactionID, $_GET['id'], $conn, $_POST); }
+            if($_GET['type'] == 3){ addCakeToTransaction($transactionID, $_GET['id'], $orderID, $conn, $_POST); }
+
+            header("Location: cart.php");
         }
     }
 
-    function addCakeToTransaction($tID, $pID, $conn, $cakeDetails){
-        $stmt = $conn->prepare("INSERT INTO cakes (tID, pID, cfID, csID, cMessage, cInstructions) VALUES (:tID, :pID, :cakeFlavor, :cakeSize, :cakeMessage, :cakeInstructions)");
+    function addCakeToTransaction($tID, $pID, $oID, $conn, $cakeDetails){
+
+        $stmt = $conn->prepare("INSERT INTO cakes (tID, pID, oID, cfID, csID, cLayers, ccID, cMessage, cInstructions) VALUES (:tID, :pID, :oID, :cakeFlavor, :cakeSize, :cakeLayers, :cakeColor, :cakeMessage, :cakeInstructions)");
         $stmt->execute([
             'tID' => $tID,
             'pID' => $pID,
+            'oID' => $oID,
             'cakeFlavor' => $cakeDetails['cakeFlavor'],
             'cakeSize' => $cakeDetails['cakeSize'],
+            'cakeLayers' => $cakeDetails['cakeLayers'],
+            'cakeColor' => $cakeDetails['cakeColor'],
             'cakeMessage' => $cakeDetails['cakeMessage'],
             'cakeInstructions' => $cakeDetails['cakeInstructions']
         ]);
+
+        $cid = $conn->lastInsertId();
+
+        if (isset($_FILES['cakeReference'])) {
+            echo "exitst";
+            $newname = "cRef"."_$cid.jpg";
+            if(move_uploaded_file($_FILES['cakeReference']['tmp_name'], "../../reference-gallery/$newname")) {
+                echo "File uploaded successfully!";
+              } else {
+                echo "Error uploading file!";
+              }
+        } 
     }
 ?>
 
@@ -119,13 +155,12 @@
                     <p>₱ <?= $product['pPrice']?> </p>
                     
                     <?php if(isset($_SESSION['userID'])){?>
-                    <!-- Quantity input -->
                     <div class="input-group mb-3">
                         <span class="input-group-text">Quantity</span>
                         <input type="number" class="form-control custom-input" min="1" value="1">
                         </div>
-
                     <button class="btn btn-primary mt-2" style="width: 200px;">Add to Cart</button>
+                    <!-- Quantity input -->
                     <?php }?>
                 </div>
             </div>
@@ -148,19 +183,18 @@
         <div class="custom-cake-image-container">
             <img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" alt="">
         </div>
-        <form action="product-view.php?id=<?= $_GET['id']?>&type=3" method="POST" class="form-container p-3">
-            <h1><?= $product['pName']?></h1>
+        <form action="product-view.php?id=<?= $_GET['id']?>&type=3" method="POST" class="form-container p-3" enctype="multipart/form-data">
+            <h1><b><?= $product['pName']?></b></h1>
             <p id="description-cake">
                 <?= $product['pDesc']?>
-            </p>
-            <p id="allergens"> May Contains Soy, Nut, Hotdog</p>
-            <p>If you are ordering a custom cake, the baker will call you to ensure clarity </p>
+            </p><br/>
+            <small id="allergens"> May Contains Soy, Nut, and Eggs</small>
 
             <hr />
             <div class="grid-container mt-1">
                 <div class="grid-item">
                     <!-- CAKE FLAVOR -->
-                    <p>Choose Cake Flavor</p>
+                    <p class="m-0">Choose Cake Flavor</p>
                     <select name="cakeFlavor" id="flavor">
                         <?php
                             $stmt = $conn->prepare("SELECT * FROM cakes_flavor WHERE pID = ?");
@@ -169,14 +203,14 @@
 
                             foreach($flavors as $flavor){
                                 $selected = isset($cakeDetails['cfID']) && $cakeDetails['cfID'] == $flavor['cfID'] ? 'selected' : '';
-                                echo "<option value='{$flavor['cfID']}' data-flavorPrice='{$flavor['cfPrice']}' $selected>{$flavor['cfName']}</option>";
+                                echo "<option value='{$flavor['cfID']}' data-flavorPrice='{$flavor['cfPrice']}' $selected>{$flavor['cfName']}<i> ({$flavor['cfPrice']} per inch)</i></option>";
                             }
                         ?>
                     </select>
                 </div>
                 <div class="grid-item">
                     <!-- CAKE SIZE -->
-                    <p>Choose Cake Size</p>
+                    <p class="m-0">Choose Cake Size</p>
                     <select name="cakeSize" id="size">
                         <?php
                             $stmt = $conn->prepare("SELECT * FROM cakes_size WHERE pID = ?");
@@ -185,7 +219,33 @@
 
                             foreach($sizes as $size){
                                 $selected = isset($cakeDetails['csID']) && $cakeDetails['csID'] == $size['csID'] ? 'selected' : '';
-                                echo "<option value='{$size['csID']}' data-sizePrice='{$size['csPrice']}' $selected>{$size['csSize']}\"</option>";
+                                echo "<option value='{$size['csID']}' data-size='{$size['csSize']}' $selected>{$size['csSize']}\"</option>";
+                            }
+                        ?>
+                    </select>
+                </div>
+                <div class="grid-item">
+                    <!-- CAKE SIZE -->
+                    <?php
+                            $stmt = $conn->prepare("SELECT * FROM cakes_layer WHERE pID = ?");
+                            $stmt->execute([$product['pID']]);
+                            $layer = $stmt->fetch(PDO::FETCH_ASSOC);
+                        ?>
+                    <p  class="m-0">Number of Layers</p>
+                    <input name="cakeLayers" class="form-control" type="number" max="<?=$layer['clMaxCount']?>" min="<?=$layer['clMinCount']?>" value='<?php if(isset($cakeDetails["cLayers"])){echo $cakeDetails["cLayers"];}else{echo $layer['clDefault'];}?>'>
+                </div>
+                <div class="grid-item">
+                    <!-- CAKE COLORS -->
+                    <p class="m-0">Choose Cake Flavor</p>
+                    <select name="cakeColor" id="color">
+                        <?php
+                            $stmt = $conn->prepare("SELECT * FROM cakes_color WHERE pID = ?");
+                            $stmt->execute([$product['pID']]);
+                            $colors = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                            foreach($colors as $color){
+                                $selected = isset($cakeDetails['ccID']) && $cakeDetails['ccID'] == $color['ccID'] ? 'selected' : '';
+                                echo "<option value='{$color['ccID']}' data-color='{$color['ccHex']}' style='background-color:{$color['ccHex']} !important;' $selected>{$color['ccName']}</option>";
                             }
                         ?>
                     </select>
@@ -197,13 +257,15 @@
                 </div>
                 <!-- Image upload field -->
                 <div class="grid-item">
-                    <label for="" class="form-label">Upload Reference:</label><small><i>Maximum File Size of 5MB</i></small><br>
-                    <input class="form-control" name="cakeReference" type="file" accept="image/*">
+                    <label for="" class="form-label">Upload Reference:</label><br>
+                    <input class="form-control" name="cakeReference" id="cakeReference" type="file" accept="image/*">
+                    <small><i> Maximum File Size of 5MB</i></small>
                 </div>
 
                 <div class="grid-item">
-                    <label for="" class="form-label">Quantity:</label><small><i>Applies the Same Customizations</i></small><br>
+                    <label for="" class="form-label">Quantity:</label><br>
                     <input class="form-control" name="cakeQuantity" type="number" min="1" step="1" value='<?php if(isset($cakeDetails["oQty"])){echo $cakeDetails["oQty"];}else{echo "1";}?>'>
+                    <small><i> Applies the Same Customizations</i></small>
                 </div>
 
                 <!-- Original message for the cake -->
@@ -214,13 +276,12 @@
                     <p id="additional-instruction-p">Additional Instructions (optional)</p>
                     <textarea name="cakeInstructions" id="instructions" maxlength="300" placeholder="Enter any special requests or instructions (max 300 characters)"><?php if(isset($cakeDetails['cInstructions'])){ echo $cakeDetails['cInstructions']; }?></textarea>
                 </div>
-                
                 <div class="divider m-2"></div>
-
+                            
                 <div class="total-and-cart">
                     <h3 class="total-price"><b>Total Price: <?php 
                         if(isset($cakeDetails['cID'])){
-                            echo ($cakeDetails['pPrice'] + $cakeDetails['cfPrice'] + $cakeDetails['csPrice']) * $cakeDetails['oQty'];
+                            echo ($cakeDetails['pPrice'] + ($cakeDetails['cfPrice'] * $cakeDetails['csSize']) * $cakeDetails['oQty']);
                         }else{
                             echo $product['pPrice'];
                         }
@@ -236,6 +297,7 @@
                     <?php } ?>
                 </div>
             </div>
+            <small>Please see our <a href="#">Terms and Services</a> to see the rules for custom cake orders.</small>
         </form>
     </section>
 
@@ -251,8 +313,9 @@
             const selectedSize = document.getElementById('size').options[document.getElementById('size').selectedIndex];
             price.firstChild.textContent = "Total Price: " + 
                 (<?php echo $product['pPrice'] ?> + 
-                Number(selectedFlavor.getAttribute('data-flavorPrice')) + 
-                Number(selectedSize.getAttribute('data-sizePrice')))
+                Number(selectedFlavor.getAttribute('data-flavorPrice'))
+                * (Number(selectedSize.getAttribute('data-size')))
+                * Number(document.getElementsByName('cakeLayers')[0].value))
                 * Number(document.getElementsByName('cakeQuantity')[0].value);
             };
 

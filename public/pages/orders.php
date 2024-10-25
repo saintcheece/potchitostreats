@@ -35,16 +35,17 @@
     // PRINTER
     function printTransactions($conn, $transactions){
         foreach($transactions as $transaction){
-            $stmt = $conn->prepare("SELECT o.oID, p.pID, p.pType, p.pName, p.pPrice,  o.oQty, cfName, csSize, cInstructions, cMessage,
-                                    CASE
-                                    WHEN p.pType = 3 THEN (p.pPrice + COALESCE(cf.cfPrice, 0) + COALESCE(cs.csPrice, 0))
-                                    ELSE p.pPrice
-                                    END AS total, p.pPrepTime
+            $stmt = $conn->prepare("SELECT c.cID, o.oID, p.pID, p.pType, p.pName, p.pPrice,  o.oQty, cf.cfName, cs.csSize, cc.ccName, c.cLayers, c.cInstructions, c.cMessage,
+                                    CASE WHEN p.pType = 3 
+                                    	THEN (p.pPrice + (COALESCE(cf.cfPrice, 0) * COALESCE(c.cLayers, 0) * COALESCE(cs.csSize, 0)))
+                                    	ELSE p.pPrice
+                                    	END AS total, p.pPrepTime
                                     FROM orders o
                                     INNER JOIN products p ON o.pID = p.pID
-                                    LEFT JOIN cakes c ON o.tID = c.tID
+                                    LEFT JOIN cakes c ON o.oID = c.oID
                                     LEFT JOIN cakes_flavor cf ON c.cfID = cf.cfID
                                     LEFT JOIN cakes_size cs ON c.csID = cs.csID
+                                    LEFT JOIN cakes_color cc ON c.ccID = cc.ccID
                                     WHERE o.tID = ?;");
             $stmt->execute([$transaction['tID']]);
             $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -89,14 +90,23 @@
                                 <?php 
                                     if($order['pType'] == 3){
                                     ?>
-                                        <small>
                                             <ul style="list-style-type: none;">
-                                                <li>Flavor: <?= $order['cfName'] ?></li>
-                                                <li>Size: <?= $order['csSize'] ?></li>
-                                                <li>Message: <?= $order['cMessage'] ?></li>
-                                                <li>Instructions: <?= $order['cInstructions'] ?></li>
+
+                                                <small>Flavor: <?= $order['cfName']?></small><br>
+                                                <small>Size: <?= $order['csSize']?></small><br>
+                                                <small>Color: <?= $order['ccName']?></small><br>
+                                                <small>Layers: <?= $order['cLayers']?></small><br>
+                                                <small>Message: <?= $order['cMessage']?></small><br>
+                                                <small>Instruction: <?= $order['cInstructions']?></small><br>
+                                                <?php
+                                                $href = "../../reference-gallery/cRef_".$order['cID'].".jpg";
+                                                if(file_exists($href)){
+                                                ?>
+                                                    <a href="<?= $href ?>" target="_blank" rel="noopener noreferrer"><small>view reference</small></a><br>
+                                                <?php
+                                                }
+                                                ?>
                                             </ul>
-                                    </small>
                                     <?php
                                     $pendingPayment += (($transaction['tType'] == 1 ) ? $order['total']* $order['oQty'] : $order['total'] * $order['oQty']/2);
                                     }
@@ -119,9 +129,10 @@
                                 // IF NOT LATE
                                 } else if ($transaction['tStatus'] > 1 && $transaction['tStatus'] <= 3 && (strtotime($transaction['tDateClaim']) - time() > 48*60*60) ){ ?>
                                     <button class="cancel-order-valid btn btn-sm btn-outline-danger" href="#" data-bs-toggle="modal" data-order-id="<?= $transaction['tID'] ?>" data-bs-target="#cancelOrderModal"><i class="icofont-headphone-alt"></i> Cancel Order</button>
-                                    <button class="btn btn-sm btn-outline-primary" href="#" data-bs-toggle="modal" data-order-id="<?= $transaction['tID'] ?>" data-bs-target="">
+                                    <!-- <button class="btn btn-sm btn-outline-primary" href="#" data-bs-toggle="modal" data-order-id="<?= $transaction['tID'] ?>" data-bs-target="">
                                         <i class="icofont-headphone-alt"></i> Edit Orders
-                                    </button><?php 
+                                    </button> -->
+                                    <?php 
                                 }
                                 // DONE DEPOSITS
                                 if($transaction['tType'] == 2 && $transaction['tStatus'] == 4 || $transaction['tStatus'] == 5){ 
@@ -259,7 +270,7 @@
         </div>
     </section>
 
-    <!-- Modal -->
+<!-- ORDER CANCELLATION MODAL -->
 <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered"> <!-- Add modal-dialog-centered class -->
         <form class="modal-content" action="../../controller/client_cancel.php" method="post">
@@ -290,6 +301,7 @@
     </div>
 </div>
 
+<!-- ORDER LATE CANCELLATION MODAL -->
 <div class="modal fade" id="cancelOrderLateModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered"> <!-- Add modal-dialog-centered class -->
         <form class="modal-content" action="../../controller/client_cancel_checkout.php" method="get">
@@ -319,6 +331,8 @@
         </form>
     </div>
 </div>
+
+<!-- ORDER EDITING MODAL -->
 
     <script>
         $('.cancel-order-valid').on('click', function() {

@@ -100,7 +100,7 @@
                 </div>
                 <div class="mb-3">
                     <label for="signPass" class="form-label">Password:</label><br>
-                    <input type="password" class="form-control" name="signPass" id="signPass" required pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" onkeyup="checkPassword()">
+                    <input type="password" class="form-control" name="signPass" id="signPass" required pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d\W_&#46;]{8,}$" onkeyup="checkPassword()">
                     <div class="d-flex justify-content-end">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="showPass" onclick="showPassword()">
@@ -120,34 +120,6 @@
                     <span id="passwordError" class="error-message"></span>
                 </div>
                 <div class="mb-3">
-                    <label for="signRegion" class="form-label">Region:</label><br>
-                    <select id="region" name="signRegion" class="form-select" required></select>
-                    <input type="hidden" id="signRegion">
-                </div>
-                <div class="mb-3">
-                    <label for="signProv" class="form-label">Province:</label><br>
-                    <select id="province" name="signProv" class="form-select" required></select>
-                    <input type="hidden" id="signProv">
-                </div>
-                <div class="mb-3">
-                    <label for="signCity" class="form-label">City:</label><br>
-                    <select id="city" name="signCity" class="form-select" required></select>
-                    <input type="hidden" id="signCity">
-                </div>
-                <div class="mb-3">
-                    <label for="signTown" class="form-label">Town:</label><br>
-                    <select id="barangay" name="signTown" class="form-select" required></select>
-                    <input type="hidden" id="signTown">
-                </div>
-                <div class="mb-3">
-                    <label for="signStreet" class="form-label">Street:</label><br>
-                    <input type="text" class="form-control" name="signStreet" id="signStreet">
-                </div>
-                <div class="mb-3">
-                    <label for="signAddHouseNum" class="form-label">House Number:</label><br>
-                    <input type="text" class="form-control" name="signAddHouseNum" id="signAddHouseNum">
-                </div>
-                <div class="mb-3">
                     <label for="signPhoneNum" class="form-label">Phone Number:</label><br>
                     <div class="input-group">
                         <div class="input-group-text">+63</div>
@@ -163,52 +135,50 @@
     </div>
 
 </body>
-<script src="../js/ph-address-selector.js"></script>
 <script>
-        function checkPassword() {
-            const password = document.getElementById('signPass').value;
-            const confirmPassword = document.getElementById('signPassConfirm').value;
-            const passwordError = document.getElementById('passwordError');
-            const submitBtn = document.getElementById('submitBtn');
+    function checkPassword() {
+        const password = document.getElementById('signPass').value;
+        const confirmPassword = document.getElementById('signPassConfirm').value;
+        const passwordError = document.getElementById('passwordError');
+        const submitBtn = document.getElementById('submitBtn');
 
-            if (password !== confirmPassword) {
-                passwordError.textContent = 'Passwords do not match';
-                submitBtn.disabled = true;
-            } else {
-                passwordError.textContent = '';
-                submitBtn.disabled = false;
-            }
+        if (password !== confirmPassword) {
+            passwordError.textContent = 'Passwords do not match';
+            submitBtn.disabled = true;
+        } else {
+            passwordError.textContent = '';
+            submitBtn.disabled = false;
         }
+    }
 
-        function showPassword() {
-            if (document.getElementById('showPass').checked) {
-                document.getElementById('signPass').type = 'text';
-                document.getElementById('signPassConfirm').type = 'text';
-            } else {
-                document.getElementById('signPass').type = 'password';
-                document.getElementById('signPassConfirm').type = 'password';
-            }
+    function showPassword() {
+        if (document.getElementById('showPass').checked) {
+            document.getElementById('signPass').type = 'text';
+            document.getElementById('signPassConfirm').type = 'text';
+        } else {
+            document.getElementById('signPass').type = 'password';
+            document.getElementById('signPassConfirm').type = 'password';
         }
-    </script>
-    <script>
-        var myInput = document.getElementById("signPass");
-        var letter = document.getElementById("letter");
-        var capital = document.getElementById("capital");
-        var number = document.getElementById("number");
-        var length = document.getElementById("length");
+    }
+
+    var myInput = document.getElementById("signPass");
+    var letter = document.getElementById("letter");
+    var capital = document.getElementById("capital");
+    var number = document.getElementById("number");
+    var length = document.getElementById("length");
 
         // When the user clicks on the password field, show the message box
-        myInput.onfocus = function() {
-        document.getElementById("message").style.display = "block";
-        }
+    myInput.onfocus = function() {
+    document.getElementById("message").style.display = "block";
+    }
 
-        // When the user clicks outside of the password field, hide the message box
-        myInput.onblur = function() {
-        document.getElementById("message").style.display = "none";
-        }
+    // When the user clicks outside of the password field, hide the message box
+    myInput.onblur = function() {
+    document.getElementById("message").style.display = "none";
+    }
 
-        // When the user starts to type something inside the password field
-        myInput.onkeyup = function() {
+    // When the user starts to type something inside the password field
+    myInput.onkeyup = function() {
         // Validate lowercase letters
         var lowerCaseLetters = /[a-z]/g;
         if(myInput.value.match(lowerCaseLetters)) {  
@@ -238,7 +208,7 @@
             number.classList.remove("valid");
             number.classList.add("invalid");
         }
-        
+    
         // Validate length
         if(myInput.value.length >= 8) {
             length.classList.remove("invalid");
@@ -247,6 +217,6 @@
             length.classList.remove("valid");
             length.classList.add("invalid");
         }
-        }
+    }
 </script>
 </html>

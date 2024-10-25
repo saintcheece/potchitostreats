@@ -76,11 +76,13 @@
                 if (password_verify($password, $hashed_password)) {
                     if ($user['uType'] == 1) {
                         $_SESSION['userID'] = $user['uID'];
+                        audit(101);
                         header("Location: index.php");
                         exit;
                     } else if ($user['uType'] == 3) {
                         $_SESSION['userID'] = $user['uID'];
                         $_SESSION['userEmail'] = $user['uEmail'];
+                        audit(201);
                         header("Location: ../../admin/admin.php");
                         exit;
                     }
@@ -109,7 +111,7 @@
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
                     <input type="password" class="form-control" id="password" name="inptPass" required>
-                    <a href="#">Forgot Password?</a>
+                    <!-- <a href="#">Forgot Password?</a> -->
                 </div>
                 <button type="submit" class="btn btn-primary">Log In</button>
             </form>
@@ -118,8 +120,6 @@
 
         <div class="image-box"></div>
     </div>
-
-    <?php include 'layout/footer.php'; ?>
 
 </body>
 </html>

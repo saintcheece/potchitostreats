@@ -1,5 +1,52 @@
 <?php
     session_start();
+
+    require '../../controller/db_model.php';
+
+    use PHPMailer\PHPMailer\PHPMailer;
+    use PHPMailer\PHPMailer\Exception;
+
+    require '..\..\vendor\phpmailer\phpmailer\src\Exception.php';
+    require '..\..\vendor\phpmailer\phpmailer\src\PHPMailer.php';
+    require '..\..\vendor\phpmailer\phpmailer\src\SMTP.php';            
+
+    if(isset($_POST["submit"])){
+        try {
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = 'smtp.gmail.com';
+            $mail->SMTPAuth = true;
+            $mail->Username = 'saintjake33@gmail.com';
+            $mail->Password = 'quvm ikur hnrx zywv';
+            $mail->SMTPSecure = 'ssl';
+            $mail->Port = 465;
+
+            $mail->setFrom($_POST["inputEmail"], $_POST["inputName"]);
+            $mail->addAddress('saintjake33@gmail.com');
+
+            $mail->isHTML(true);
+            $mail->Subject = 'Potchito\'s Customer Query';
+            $mail->Body    = $_POST["inputMessage"];
+
+            $mail->send();
+
+            notify(2);
+
+            echo 'Email has been sent';
+        } catch (Exception $e) {
+            echo 'womp womp';
+        }
+    }
+
+    include 'layout/header.php'; 
+
+    $user = [];
+    
+    if(isset($_SESSION['userID'])){
+        $stmt = $conn->prepare("SELECT uEmail, CONCAT(uFName, ' ', uLName) AS uName FROM users WHERE uID = :userID");
+        $stmt->execute(array(':userID' => $_SESSION['userID']));
+        $user = $stmt->fetch();
+    }
 ?>
 
 <!DOCTYPE html>
@@ -21,10 +68,11 @@
 body{
     font-family: 'Poppins', sans-serif;
     background-color: #ffffff;
+    
 
 }
 #contact-us{
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;   
@@ -85,20 +133,17 @@ body{
     </style>
 </head>
 <body>
-
-    <?php include 'layout/header.php'; ?>
-
     <section id="contact-us">
-  <h1>Contact Us</h1>
+  <h1 class="mt-3">Contact Us</h1>
   <p>If you have any inquiries, concern, or in need of clarifications.</p>
-  <form action="">
+  <form action="contact.php" method="POST" class="m-0">
     <label for="name">Name:</label>
-    <input type="text" id="name" name="name" required>
+    <input type="text" id="name" name="inputName" value="<?php echo isset($user) && isset($user['uName']) ? htmlspecialchars($user['uName']) : ''; ?>" <?php echo isset($_SESSION['userID']) ? 'readonly' : 'required'; ?>>
     <label for="email">Email:</label>
-    <input type="email" id="email" name="email" required>
+    <input type="email" id="email" name="inputEmail" value="<?php echo isset($user) && isset($user['uEmail']) ? htmlspecialchars($user['uEmail']) : ''; ?>" <?php echo isset($_SESSION['userID']) ? 'readonly' : 'required'; ?>>
     <label for="message">Message:</label>
-    <textarea id="message" name="message" required></textarea>
-    <input type="submit" value="Submit">
+    <textarea id="message" name="inputMessage" required placeholder="What would you like to talk about?"></textarea>
+    <input type="submit" name="submit" value="Submit">
   </form>
 </section>
     <?php include 'layout/footer.php'; ?>

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Products</title>
     <link rel="stylesheet" href="css/manage-product.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <script src="js/navbar-loader.js" defer></script>
     <?php
         session_start();
@@ -26,7 +28,7 @@
         }
     ?>
 </head>
-<body>
+<body id="main" class="p-0">
     <?php include 'layout/navbar.php'; ?>
 
     <section id="main-container">
@@ -39,7 +41,7 @@
                         <th>Product Image</th>
                         <th>Product Name</th>
                         <th>Product Price</th>
-                        <th>Actions</th>
+                        <!-- <th>Actions</th> -->
                     </tr>
                 </thead>
                 <tbody>
@@ -49,7 +51,7 @@
                             <td><img src="../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" class="product-image"></td>
                             <td><?= $product['pName'] ?></td>
                             <td>₱<?= $product['pPrice'] ?></td>
-                            <td>
+                            <!-- <td>
                                 <?php if($product['pVisibility'] == 1){ ?>
                                 <a href="manage-products.php?toDisable=<?=$product['pID']?>" class="btn disable" style="text-decoration: none;" data-id="<?= $product['pID'] ?>">Disable</a>
                                 <?php }else{ ?>
@@ -58,7 +60,7 @@
                                 <button class="btn delete" data-id="<?= $product['pID'] ?>">Delete</button>
                                 <button class="btn" data-id="<?= $product['pID'] ?>">Edit</button>
                                 <button class="btn success" data-id="<?= $product['pID'] ?>">Feature</button>
-                            </td>
+                            </td> -->
                         </tr>
                     <?php } ?>
                     <!-- Repeat above row for additional products -->
