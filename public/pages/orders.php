@@ -117,8 +117,16 @@
                             <?php 
                                 $diff = strtotime($transaction['tDateClaim']) - time();
                                 $hours = floor($diff / (60 * 60));
+                                // IF ORDER IS > 48 HOURS
+                                // IF ORDER IS PENDING
+                                // IF ORDER IS NOT CLAIMED
+                                if($transaction['tType'] == 1 && $transaction['tStatus'] < 4 && $transaction['tStatus'] > 2) { ?>
+                                    <button class="cancel-order-valid btn btn-sm btn-outline-danger" href="#" data-bs-toggle="modal" data-order-id="<?= $transaction['tID'] ?>" data-bs-target="#cancelOrderModal"><i class="icofont-headphone-alt"></i> Cancel Order</button><?php 
+                                } else if($hours < 48 && $transaction['tType'] == 1 && $transaction['tStatus'] == 3) { ?>
+                                    <button class="cancel-order-late btn btn-sm btn-outline-danger" data-order-id="<?= $transaction['tID'] ?>">Cancel Order</button><?php 
                                 // IF ORDER IS < 48 HOURS
                                 // IF ORDER IS ACCEPTED
+                                }
                                 if($transaction['tStatus'] == 4 || $transaction['tStatus'] == 5) { ?>
                                     <a class="btn btn-sm btn-outline-secondary" href="https://www.google.com/maps/place/Potchito's+Buns+x+Cookies/@15.0776334,120.9362988,17.95z/data=!4m6!3m5!1s0x339703be6c93bf6b:0xceff0ab57a3a425c!8m2!3d15.0779421!4d120.9374447!16s%2Fg%2F11s0drmx4v?entry=ttu&g_ep=EgoyMDI0MTAwOS4wIKXMDSoASAFQAw%3D%3D" target="_blank"><i class="icofont-headphone-alt"></i> Get Directions</a><?php 
                                 }

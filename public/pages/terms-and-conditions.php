@@ -49,6 +49,9 @@
 
     <h2>6. Changes to Terms</h2>
     <p>We reserve the right to update or modify these Terms and Conditions at any time without prior notice. Changes will take effect once posted on this page. We encourage you to review these terms periodically to stay informed of any updates.</p>
+
+    <h2>7. No Return Policy</h2>
+    <p>All sales are final. We do not accept returns or exchanges of any kind. Please make sure to review your order carefully before submitting it as we cannot make any changes once the order has been placed.</p>
 </section>
 
 

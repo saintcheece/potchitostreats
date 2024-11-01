@@ -250,9 +250,25 @@
                             </div>
                         </div>
 
-                        <button class="btn btn-primary w-100 mt-2" <?php if(count($products) == 0) echo 'disabled';?>>
-                            Proceed to Checkout
-                        </button>
+                        <?php
+                            $stmt = $conn->prepare("SELECT COUNT(*) as count FROM transactions WHERE tStatus > 1 AND tStatus < 6 AND uID = ?");
+                            $stmt->execute([$_SESSION['userID']]);
+                            $result = $stmt->fetch();
+                            if($result['count'] >= 3){
+                        ?>
+                            <button class="btn btn-primary w-100 mt-2" disabled>
+                                Proceed to Checkout
+                            </button>
+                            <p class="text-danger">You already have 3 ongoing orders</p>
+                        <?php
+                            }else{
+                        ?>
+                            <button class="btn btn-primary w-100 mt-2" <?php if(count($products) == 0) echo 'disabled';?>>
+                                Proceed to Checkout
+                            </button>
+                        <?php
+                            }
+                        ?>
                         <?php }?>
                     </form>
                 </div>

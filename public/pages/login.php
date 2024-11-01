@@ -34,11 +34,16 @@
             margin-top: 15px;
             text-align: center;
         }
+        .error-message {
+            color: red;
+            margin-bottom: 10px;
+            text-align: center;
+        }
         .image-box {
             width: 65%;
             height: 100%;
             background: 
-    linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), /* Darken with black gradient */
+    linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
     url('../assets/potchitosrepeat.png');
 
 
@@ -52,7 +57,7 @@
                 width: 90%;
             }
             .image-box {
-                display: none; /* Hide image box on smaller screens */
+                display: none; 
             }
             .page-container {
                 flex-direction: column;
@@ -62,6 +67,8 @@
 
     <?php
         session_start();
+        $error = false;
+
         require_once("../../controller/db_model.php");
         if (isset($_POST['inptEmail']) && isset($_POST['inptPass'])) {
             $emailAddress = filter_input(INPUT_POST, 'inptEmail', FILTER_SANITIZE_EMAIL);
@@ -70,7 +77,6 @@
             $stmt = $conn->prepare("SELECT * FROM users WHERE uEmail = ?");
             $stmt->execute([$emailAddress]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
             if ($user) {
                 $hashed_password = $user['uPass'];
                 if (password_verify($password, $hashed_password)) {
@@ -87,10 +93,10 @@
                         exit;
                     }
                 } else {
-                    echo "Password is incorrect.";
+                    $error = true;
                 }
             } else {
-                echo "User not found.";
+                $error = true;
             }
         }
     ?>
@@ -103,6 +109,9 @@
     <div class="page-container">
         <div class="form-box">
             <h1 class="text-center">Log In</h1>
+            <?php if ($error): ?>
+                <div class="error-message">Incorrect email or password</div>
+            <?php endif; ?>
             <form action="login.php" method="post">
                 <div class="mb-3">
                     <label for="email" class="form-label">Email address</label>
@@ -111,8 +120,9 @@
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
                     <input type="password" class="form-control" id="password" name="inptPass" required>
-                    <!-- <a href="#">Forgot Password?</a> -->
-                </div>
+                    <div class="text-end">
+                        <a href="ForgotPassword.php">Forgot Password?</a>
+                    </div>                </div>
                 <button type="submit" class="btn btn-primary">Log In</button>
             </form>
             <p>Don't have an account yet? <span><a href="signup.php">Sign Up Instead</a></span></p>

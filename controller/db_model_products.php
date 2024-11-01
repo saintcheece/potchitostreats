@@ -1,7 +1,7 @@
 <?php 
     session_start();
     require(__DIR__ . '/../controller/db_model.php');
-    $stmt = $conn->prepare("SELECT * FROM products WHERE pVisibility = 1");
+    $stmt = $conn->prepare("SELECT * FROM products WHERE pVisibility = 1 ORDER BY pID DESC");
     $stmt->execute();
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -16,7 +16,7 @@
                             <img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" class="card-img-top">
                             <div class="card-body">
                                 <h5 class="card-title"><?= $product['pName'] ?></h5>
-                                <p class="card-text">₱<?= $product['pPrice'] ?></p>
+                                <p class="card-text"><?= $product['pType'] == 3 ? 'Starts at ' : '' ?>₱<?= $product['pPrice'] ?></p>
                                 <?php if(isset($_SESSION['userID']) && $_SESSION['userID'] != null) { ?>
                                     <form action="<?= $product['pType'] == 3 ? 'product-view.php?id=' . $product['pID'] . '&type=3' : 'product-by-type.php' ?>" method="post">
                                         <input type="hidden" name="addToCart" value="<?= $product['pID'] ?>">

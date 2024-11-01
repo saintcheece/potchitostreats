@@ -14,6 +14,17 @@
         $stmt->execute([$_SESSION['userID']]);
         $transactionID = $stmt->fetchColumn();
 
+        $currentQuantity = 0;
+
+        if($transactionID){
+            $stmt = $conn->prepare("SELECT oQty FROM orders WHERE tID = ? AND pID = ?");
+            $stmt->execute([$transactionID, $_GET['id']]);
+            $currentQuantity = $stmt->fetchColumn();
+            if($currentQuantity === false){
+                $currentQuantity = 0;
+            }
+        }
+
         // GET CAKE CUSTOMIZATIONS
         $stmt = $conn->prepare("SELECT COUNT(*) FROM cakes WHERE pID = ? AND tID = ?");
         $stmt->execute([$_GET['id'], $transactionID]);
@@ -31,6 +42,7 @@
             $stmt->execute([$_GET['id'], $transactionID]);
             $cakeDetails = $stmt->fetch(PDO::FETCH_ASSOC);
         }
+
     }
 
     // ADD TO CART CLICKED
@@ -98,6 +110,36 @@
         }
     }
 
+    if(isset($_POST['noncake-quantity'])){
+        if ($transactionID != null) {
+            // if order of product exists, update the order details
+            $stmt = $conn->prepare("SELECT oID FROM orders WHERE tID = ? AND pID = ?");
+            $stmt->execute([$transactionID, $_GET['id']]);
+            $orderID = $stmt->fetchColumn();
+            
+            // if order of product exists, increment the quantity
+            if ($orderID != null) {
+                $stmt = $conn->prepare("UPDATE orders SET oQty = ? WHERE oID = ?");
+                $stmt->execute([$_POST['noncake-quantity'], $orderID]);
+            }else{
+                $stmt = $conn->prepare("INSERT INTO orders (tID, pID, oQty) VALUES (?, ?, ?)");
+                $stmt->execute([$transactionID, $_GET['id'], $_POST['noncake-quantity']]);
+                $orderID = $conn->lastInsertId();
+            }
+        }else{
+        // if no transaction exists, create one
+        $stmt = $conn->prepare("INSERT INTO transactions (uID, tStatus) VALUES (?, 1)");
+        $stmt->execute([$_SESSION['userID']]);
+        $transactionID = $conn->lastInsertId();
+        // then add the product
+        $stmt = $conn->prepare("INSERT INTO orders (tID, pID, oQty) VALUES (?, ?, ?)");
+        $stmt->execute([$transactionID, $_GET['id'], $_POST['noncake-quantity']]);
+        $orderID = $conn->lastInsertId();
+        }
+
+        header('Location: cart.php');
+    }
+
     function addCakeToTransaction($tID, $pID, $oID, $conn, $cakeDetails){
 
         $stmt = $conn->prepare("INSERT INTO cakes (tID, pID, oID, cfID, csID, cLayers, ccID, cMessage, cInstructions) VALUES (:tID, :pID, :oID, :cakeFlavor, :cakeSize, :cakeLayers, :cakeColor, :cakeMessage, :cakeInstructions)");
@@ -155,11 +197,17 @@
                     <p>₱ <?= $product['pPrice']?> </p>
                     
                     <?php if(isset($_SESSION['userID'])){?>
-                    <div class="input-group mb-3">
-                        <span class="input-group-text">Quantity</span>
-                        <input type="number" class="form-control custom-input" min="1" value="1">
-                        </div>
-                    <button class="btn btn-primary mt-2" style="width: 200px;">Add to Cart</button>
+                        <form action="product-view.php?id=<?= $_GET['id']?>&type=1" method="POST">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">Quantity</span>
+                            <input type="number" name="noncake-quantity" class="form-control custom-input" min="1" value="<?php if($currentQuantity == 0){ echo 1; } else { echo $currentQuantity; }?>">
+                            </div>  
+                            <?php if($currentQuantity = 0){ ?>
+                                <button class="btn btn-primary mt-2" style="width: 200px;">Add to Cart</button>
+                            <?php } else { ?>
+                                <button class="btn btn-outline-primary mt-2" style="width: 200px;">Update Cart</button>
+                            <?php } ?>
+                        </form>
                     <!-- Quantity input -->
                     <?php }?>
                 </div>
@@ -179,7 +227,6 @@
 
     <?php include 'layout/header.php'; ?>
     <section id="background">
-        <!-- CAKE IMAGE -->
         <div class="custom-cake-image-container">
             <img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" alt="">
         </div>
@@ -203,14 +250,14 @@
 
                             foreach($flavors as $flavor){
                                 $selected = isset($cakeDetails['cfID']) && $cakeDetails['cfID'] == $flavor['cfID'] ? 'selected' : '';
-                                echo "<option value='{$flavor['cfID']}' data-flavorPrice='{$flavor['cfPrice']}' $selected>{$flavor['cfName']}<i> ({$flavor['cfPrice']} per inch)</i></option>";
+                                echo "<option value='{$flavor['cfID']}' data-flavorPrice='{$flavor['cfPrice']}' $selected>{$flavor['cfName']}<i> (₱{$flavor['cfPrice']} per inch)</i></option>";
                             }
                         ?>
                     </select>
                 </div>
                 <div class="grid-item">
                     <!-- CAKE SIZE -->
-                    <p class="m-0">Choose Cake Size</p>
+                    <p class="m-0">Choose Cake Size</p> 
                     <select name="cakeSize" id="size">
                         <?php
                             $stmt = $conn->prepare("SELECT * FROM cakes_size WHERE pID = ?");
@@ -231,12 +278,12 @@
                             $stmt->execute([$product['pID']]);
                             $layer = $stmt->fetch(PDO::FETCH_ASSOC);
                         ?>
-                    <p  class="m-0">Number of Layers</p>
+                    <p  class="m-0">Number of Internal Layers</p>
                     <input name="cakeLayers" class="form-control" type="number" max="<?=$layer['clMaxCount']?>" min="<?=$layer['clMinCount']?>" value='<?php if(isset($cakeDetails["cLayers"])){echo $cakeDetails["cLayers"];}else{echo $layer['clDefault'];}?>'>
                 </div>
                 <div class="grid-item">
                     <!-- CAKE COLORS -->
-                    <p class="m-0">Choose Cake Flavor</p>
+                    <p class="m-0">Choose Cake Color</p>
                     <select name="cakeColor" id="color">
                         <?php
                             $stmt = $conn->prepare("SELECT * FROM cakes_color WHERE pID = ?");

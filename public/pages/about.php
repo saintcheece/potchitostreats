@@ -21,7 +21,7 @@
 
     </div>
     <div id="image-container">
-        <img src="assets/default.png" alt="">
+        <img src="../assets/potchitos_owner.jpg" alt="">
     </div>
 
 </section>

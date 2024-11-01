@@ -38,32 +38,24 @@
         </div>
     </div>
 
-        <!-- HIGHLIGHT PRODUCTS -->
-        <div class="featured-section bg-white py-5">
-            <h2 class="ps-5 pt-4 mb-4 text-center">Featured Goodies</h2> 
+    <!-- HIGHLIGHT PRODUCTS -->
+    <div class="featured-section bg-white py-5">
+        <h2 class="ps-5 pt-4 mb-4 text-center">Featured Goodies</h2> 
 
-            <div class="carousel" data-flickity='{ "groupCells": true, "wrapAround": true, "cellAlign": "left", "prevNextButtons": true, "pageDots": false }'>
-
-                <?php
-                // Fetch only featured products
-                $stmt = $conn->prepare("SELECT * FROM products WHERE pFeatured = 2 AND pVisibility = 1"); // Ensure only visible products are fetched
-                $stmt->execute();
-                $featuredProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                
-                foreach ($featuredProducts as $product) { ?>
-                    <div class="card mx-2" style="width: 20rem;">
-                        <a href="product-view.php?id=<?= $product['pID'] ?>&type=<?= $product['pType'] ?>" class="product-link">
-                            <img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1] . "_" . $product['pID'] . ".jpg" ?>" class="card-img-top">
-                            <div class="card-body text-center">
-                                <h5 class="card-title"><?= $product['pName'] ?></h5>
-                                <p class="card-text">₱<?= $product['pPrice'] ?></p>
-                            </div>
-                        </a>
+        <div class="carousel" data-flickity='{ "groupCells": true, "wrapAround": true, "cellAlign": "left", "prevNextButtons": true, "pageDots": false }'>
+            <?php foreach ($products as $product) { ?>
+                <div class="card mx-2" style="width: 20rem;">
+                    <a href="product-view.php?id=<?= $product['pID']?>&type=<?=$product['pType']?>" class="product-link">                    <img src="../../product-gallery/<?= array('Cookie', 'Pastry', 'Cake')[$product['pType']-1]."_".$product['pID'].".jpg"?>" class="card-img-top">
+                    <div class="card-body text-center">
+                        <h5 class="card-title"><?= $product['pName'] ?></h5>
+                        <p class="card-text">₱<?= $product['pPrice'] ?></p>
                     </div>
-                <?php } ?>
-            </div>
+                    </a>
+                </div>
+            <?php } ?>
         </div>
-
+    </div>
+    
     <!-- CATEGORIES -->
     <div class="h-50 w-100 d-flex flex-row">
         <a href="product-by-type.php?type=3" class="cakes-section h-100 w-100 d-inline-block d-flex align-items-center justify-content-center text-decoration-none">

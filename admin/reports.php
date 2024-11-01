@@ -299,7 +299,7 @@
                 <canvas id="salesChart"></canvas> 
             </div>
             <div class="button-group">
-                <a class="generate-button btn-primary" href="generate_pdf.php">Print Sales Report</a>
+            <a href="genrep_annual.php" class="generate-button btn btn-primary">Print Report</a>
             </div>
         </div>
 
@@ -309,14 +309,34 @@
                 SELECT 
                     p.pName, 
                     p.pType,
-                    o.oQty,     
-                    SUM(o.oQty) AS total_sold
-                FROM products p
-                INNER JOIN orders o ON p.pID = o.pID
-                INNER JOIN transactions t ON o.tID = t.tID
-                WHERE t.tStatus = 6
-                GROUP BY p.pID
-                ORDER BY total_sold DESC
+                    SUM(o.oQty) AS total_quantity_sold,
+                    SUM(
+                        CASE 
+                            WHEN p.pType = 3 
+                                THEN (p.pPrice + (COALESCE(cf.cfPrice, 0) * COALESCE(c.cLayers, 0) * COALESCE(cs.csSize, 0))) * o.oQty
+                            ELSE p.pPrice * o.oQty
+                        END
+                    ) AS total_revenue
+                FROM 
+                    products p
+                INNER JOIN 
+                    orders o ON p.pID = o.pID
+                LEFT JOIN 
+                    cakes c ON o.oID = c.oID
+                LEFT JOIN 
+                    cakes_flavor cf ON c.cfID = cf.cfID
+                LEFT JOIN 
+                    cakes_size cs ON c.csID = cs.csID
+                LEFT JOIN 
+                    cakes_color cc ON c.ccID = cc.ccID
+                INNER JOIN 
+                    transactions t ON o.tID = t.tID
+                WHERE 
+                    t.tStatus = 6
+                GROUP BY 
+                    p.pID
+                ORDER BY 
+                    total_quantity_sold DESC;
             ");
             $stmt->execute();
             $soldProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -325,12 +345,12 @@
         <!-- Products Report Section -->
         <div class="report-section" id="products">
             <div class="button-group max-width-group">
-                <div class="filter-button-container">
+                <!-- <div class="filter-button-container">
                     <button class="sales-period-button" onclick="filterProducts('all')">All Products</button>
                     <button class="sales-period-button" onclick="filterProducts('cakes')">Cakes</button>
                     <button class="sales-period-button" onclick="filterProducts('pastries')">Pastries</button>
-                </div>
-                <a href="generate_pdf.php?report=products" class="generate-button btn btn-primary">Print Report</a>
+                </div> -->
+                <a href="genrep_products.php" class="generate-button btn btn-primary">Print Report</a>
             </div>
             <table id="productsTable">
                 <thead>
@@ -344,7 +364,8 @@
                     foreach ($soldProducts as $product) {
                     ?><tr>
                         <td><?= $product['pName']?></td>
-                        <td><?= $product['oQty']?></td>
+                        <td><?= $product['total_quantity_sold']?></td>
+                        <td><?= $product['total_revenue']?></td>
                         <td></td>
                     </tr><?php
                     }
@@ -361,9 +382,9 @@
         <!-- Orders Report Section -->
         <div class="report-section" id="orders">
             <div class="button-group">
-                <a class="generate-button btn btn-primary">Print Report</a>
+                <a href="genrep_orders.php" class="generate-button btn btn-primary">Print Report</a>
             </div>
-            <table id="ordersTable">
+            <table id="ordersTable" class="table table-bordered">
                 <thead>
                     <tr>
                         <th>Order #</th>

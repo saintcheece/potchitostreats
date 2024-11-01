@@ -11,27 +11,10 @@
     <?php
         session_start();
         require('../controller/db_model.php');
-        $searchOrderID = isset($_GET['searchOrderID']) ? $_GET['searchOrderID'] : null;
             
-        function getTransactionsWithStatus($status, $orderID = null) {
+        function getTransactionsWithStatus($status) {
             global $conn;
-                    // Adjust query to filter by Order ID if provided
-                    $query = 'SELECT t.tID, u.uPhone, CONCAT(u.uFName, " ", u.uLName) AS uName, t.tType, t.tDateOrder, t.tDateClaim, t.tPayStatus, t.tStatus, t.tPayRemain, t.tDateOrder
-                    FROM transactions t
-                    INNER JOIN users u ON t.uID = u.uID
-                    WHERE tStatus = ?';
-
-                    if ($orderID) {
-                    $query .= ' AND t.tID = ?';
-                    $stmt = $conn->prepare($query);
-                    $stmt->execute([$status, $orderID]);
-                    } else {
-                    $query .= ' ORDER BY tID DESC';
-                    $stmt = $conn->prepare($query);
-                    $stmt->execute([$status]);
-                    }
-                    $pendings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $stmt = $conn->prepare('SELECT t.tID, CONCAT(u.uFName, " ", u.uLName) AS uName, t.tType, t.tDateOrder, t.tDateClaim, t.tPayStatus, t.tStatus, t.tPayRemain, t.tDateOrder, u.uPhone, u.uEmail
+            $stmt = $conn->prepare('SELECT t.tID, u.uPhone, CONCAT(u.uFName, " ", u.uLName) AS uName, t.tType, t.tDateOrder, t.tDateClaim, t.tPayStatus, t.tStatus, t.tPayRemain, t.tDateOrder
                                     FROM transactions t
                                     INNER JOIN users u ON t.uID = u.uID
                                     WHERE tStatus = ?
@@ -57,9 +40,7 @@
 
             <tr class="<?= $pending['tType'] == 1 ? 'table-success' : 'table-warning' ?>">
                 <td><?= $pending['tID']; ?></td>
-                <td><?= $pending['uName']; ?><br>
-                    <small><i><?= $pending['uPhone']; ?></i></small><br>
-                    <small><i><?= $pending['uEmail']; ?></i></small></td>
+                <td><?= $pending['uName']; ?></td>
                 <td><ul>
                 <?php
                     $totalPay = 0;
@@ -127,11 +108,6 @@
     <section id="main-container">
        
         <main>
-            <!-- <form action="orders.php" method="GET">
-                <label for="searchOrderID">Search by Order ID:</label>
-                <input type="text" name="searchOrderID" id="searchOrderID" class="form-control" placeholder="Enter Order ID" value="<?= isset($_GET['searchOrderID']) ? htmlspecialchars($_GET['searchOrderID']) : '' ?>">
-                <button type="submit" class="btn btn-primary mt-2">Search</button>
-            </form> -->
             <form action="orders.php" method="POST">
             <h1 class="page-title">Manage Orders</h1>
             <ul class="tabs">
@@ -139,7 +115,7 @@
                 <li class="tab-link" data-tab="processing">Processing Orders</li>
                 <li class="tab-link" data-tab="claim">For Claim</li>
                 <li class="tab-link" data-tab="done">Complete Orders</li>
-                <li class="tab-link" data-tab="failed">Cancelled Orders</li>
+                <li class="tab-link" data-tab="failed">Failed Orders</li>
             </ul>
             <div class="tab-content" id="pending">
                 <div class="color-enumerator" style="text-align: center;">
@@ -149,9 +125,9 @@
                 <table class="orders-table table">
                     <thead>
                         <tr class="table-dark">
-                            <th>Order ID</th>
-                            <th>Customer</th>
-                            <th>Orders</th>
+                            <th>ID</th>
+                            <th>Customer Name</th>
+                            <th>Orders + Amount</th>
                             <th>Paid</th>
                             <th>Pending</th>
                             <th>Pickup Date</th>
@@ -161,7 +137,7 @@
                     <tbody>
                         <?php
                         // GET EACH PENDING ORDER ITEMS 
-                        $pendings = getTransactionsWithStatus(2, $searchOrderID); ?>
+                        $pendings = getTransactionsWithStatus(2);?>
                     </tbody>
                 </table>
             </div>
@@ -179,7 +155,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php getTransactionsWithStatus(3, $searchOrderID); ?>
+                        <?php getTransactionsWithStatus(3);?>
                     </tbody>
                 </table>
             </div>
@@ -197,8 +173,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php getTransactionsWithStatus(5, $searchOrderID);?>
-                        <?php getTransactionsWithStatus(4, $searchOrderID);?>
+                        <?php getTransactionsWithStatus(5);?>
+                        <?php getTransactionsWithStatus(4);?>
                         <!-- Add more rows as needed -->
                     </tbody>
                 </table>
@@ -217,7 +193,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php getTransactionsWithStatus(6,$searchOrderID);?>
+                        <?php getTransactionsWithStatus(6);?>
                         <!-- Add more rows as needed -->
                     </tbody>
                 </table>
@@ -244,8 +220,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php getTransactionsWithStatus(-1,$searchOrderID);?>
-                        <?php getTransactionsWithStatus(0,$searchOrderID);?>
+                        <?php getTransactionsWithStatus(-1);?>
+                        <?php getTransactionsWithStatus(0);?>
                         <!-- Add more rows as needed -->
                     </tbody>
                 </table>

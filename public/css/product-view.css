@@ -61,6 +61,7 @@ width: 200px; /* Set your desired width */
     display: flex;
     flex-direction: column;
     padding: 3em;
+    overflow: auto;
 }
 
 .form-container h1 {
